@@ -7,7 +7,7 @@ import 'package:http/http.dart';
 abstract class SyncExecutor<ID> {
   Future<List<ID>> downloadIds(Client client);
 
-  Future<FindDto> downloadData(Client client, int page, int pageSize);
+  Future<FindDto> downloadData(Client client, int page);
 
   Future<dynamic> downloadOne(Client client, ID identifier);
 
@@ -18,7 +18,7 @@ abstract class SyncExecutor<ID> {
   // fixme: get rid of
   Future<String> fetch(Client client, String uri) async {
     // fixme: auth
-    var response = await client.get('http://192.168.1.35:8080/$uri');
+    var response = await client.get('http://192.168.43.167:8080/$uri');
     return Utf8Decoder().convert(response.bodyBytes);
   }
 }

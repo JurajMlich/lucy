@@ -47,8 +47,8 @@ class UserSyncExecutor extends SyncExecutor<String> {
 
   @override
   Future<FindDto> downloadData(
-      Client client, int page, int pageSize) async {
-    var response = await fetch(client, 'users?page=$page&size=$pageSize');
+      Client client, int page) async {
+    var response = await fetch(client, 'users?page=$page&size=1');
     return FindDto.fromJson(jsonDecode(response));
   }
 

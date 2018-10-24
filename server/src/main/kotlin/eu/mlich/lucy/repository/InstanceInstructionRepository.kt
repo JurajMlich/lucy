@@ -8,6 +8,5 @@ import org.springframework.transaction.annotation.Transactional
 
 @Repository
 interface InstanceInstructionRepository: JpaRepository<InstanceInstruction, Int> {
-    @Transactional(readOnly = true)
     fun findByInstanceOrderByCreationDatetime(instance: Instance): List<InstanceInstruction>
 }
