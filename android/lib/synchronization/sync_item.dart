@@ -1,14 +1,18 @@
+/// Type of item that is being synchronized with server.
 enum SyncItemType {
   user,
   deposit,
 }
 
+/// State of refresh.
 enum SyncItemRefreshResultState {
-  toBeSynchronized,
+  errorOccurred,
   referenceMissing,
-  synchronized,
+  refreshed,
 }
 
+/// Item that is being synchronized with server. Has overridden hashCode and
+/// ==, so two items with identical types and ids have the same hashCode and id.
 class SyncItem {
   SyncItemType type;
   dynamic id;
@@ -29,9 +33,14 @@ class SyncItem {
       id.hashCode;
 }
 
+/// Result of refresh action of an item.
 class SyncItemRefreshResult {
+  /// Item attempted to be refreshed.
   SyncItem item;
+  /// State of refresh.
   SyncItemRefreshResultState state;
+  /// In case of refresh being unsuccessful as some other items need to be
+  /// refreshed, these are the other items.
   Set<SyncItem> missingReferences;
 
   SyncItemRefreshResult(

@@ -9,11 +9,11 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Main unit for synchronization. Two modes of synchronization are supported:
-/// full and incremental. In full sync, all data are removed using sync services
-/// and downloaded again while ensuring data integrity. After full sync,
-/// commands are downloaded from server, doing incremental sync if anything
-/// changed while full sync in progress.
+/// Main unit for synchronization with server. Two modes of synchronization are
+/// supported: full and incremental. In full sync, all data are removed using
+/// sync services and downloaded again while ensuring data integrity. After full
+/// sync, commands are downloaded from server, doing incremental sync if
+/// anything changed while full sync in progress.
 ///
 /// To ensure all data are downloaded, the client first downloads ids of all
 /// items available. Then downloads items page by page until all pages are
@@ -39,6 +39,8 @@ class Synchronization {
   final Map<SyncItemType, SyncService> _serviceToTypeMap;
 
   final Set<_ItemToRefresh> _itemsToRefresh;
+  // note: SyncItem has overridden hashCode and ==, so two items with the
+  // same type and id are the same object from the point of view of the map
   final Map<SyncItem, _ItemToRefresh> _itemToWrapperMap;
 
   Synchronization(
@@ -99,6 +101,15 @@ class Synchronization {
           // we send instructions once more time as something new could have
           // happened and they may cause new server instructions to be
           // downloaded
+          //
+          // another scenario:
+          // 1. item A is changed on server and refresh command is downloaded
+          // 2. items A and B change, new refresh commands are generated
+          // 3. the first refresh command is executed (however, we get the
+          // newest data, not data at the time of command creation)
+          // 4. data in item A may be invalid as they require update of item B
+          //
+          // so at the end of every sync, we download new instructions
           await _sendInstructions(client);
           await _downloadAndExecuteInstructions(
               client, findCommandsSince, findCommandsUntil);
@@ -148,7 +159,7 @@ class Synchronization {
         var result = await _serviceToTypeMap[wrapper.item.type]
             .refreshOne(client, wrapper.item.id);
 
-        if (result.state == SyncItemRefreshResultState.synchronized) {
+        if (result.state == SyncItemRefreshResultState.refreshed) {
           atLeastOne = true;
         }
 
@@ -162,7 +173,7 @@ class Synchronization {
   /// Update download graph according to result.
   Future<Null> _processRefreshResult(SyncItemRefreshResult result) async {
     // if item was not successfully synchronized
-    if (result.state == SyncItemRefreshResultState.toBeSynchronized ||
+    if (result.state == SyncItemRefreshResultState.errorOccurred ||
         result.state == SyncItemRefreshResultState.referenceMissing) {
       // logging
       if (result.state == SyncItemRefreshResultState.referenceMissing) {
@@ -303,9 +314,10 @@ class Synchronization {
     }
   }
 
+  /// Send instructions to server (changes).
   Future<Null> _sendInstructions(Client client) async {
     _logger.info('Sending instructions');
-    // todo send each instruction to corresponding REST endpoint
+    // todo(push): send each instruction to corresponding REST endpoint
   }
 
   /// Wrap sync item in wrapper which contains additional info. Always

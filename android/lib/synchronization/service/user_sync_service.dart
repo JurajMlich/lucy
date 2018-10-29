@@ -44,7 +44,7 @@ class UserSyncService extends SyncService<String> {
         SyncItemType.user,
         user.id,
       ),
-      SyncItemRefreshResultState.synchronized,
+      SyncItemRefreshResultState.refreshed,
       Set(),
     );
   }

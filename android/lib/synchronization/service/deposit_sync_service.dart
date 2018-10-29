@@ -54,7 +54,7 @@ class DepositSyncService extends SyncService<String> {
         SyncItemType.deposit,
         deposit.id,
       ),
-      SyncItemRefreshResultState.synchronized,
+      SyncItemRefreshResultState.refreshed,
       Set(),
     );
   }
