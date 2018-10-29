@@ -5,6 +5,7 @@ import 'package:android/model/deposit.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/repository/deposit_repository.dart';
 import 'package:android/repository/user_repository.dart';
+import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
 import 'package:http/http.dart';
@@ -19,7 +20,10 @@ class DepositSyncService extends SyncService<String> {
   DepositSyncService(this._depositRepository, this._userRepository);
 
   @override
-  Future<Null> sendInstruction(ServerInstruction instruction) async {}
+  Future<Null> sendInstruction(
+    ServerClient client,
+    ServerInstruction instruction,
+  ) async {}
 
   Future<SyncItemRefreshResult> processOne(dynamic rawDeposit) async {
     var deposit = await _depositRepository.findById(rawDeposit['id']);
@@ -61,13 +65,13 @@ class DepositSyncService extends SyncService<String> {
 
   @override
   Future<SyncItemRefreshResult> refreshOne(
-      Client client, String identifier) async {
-    var response = await fetch(client, 'deposits/$identifier');
-    return await processOne(jsonDecode(response));
+      ServerClient client, String identifier) async {
+    var response = await client.get('deposits/$identifier');
+    return await processOne(jsonDecode(response.body));
   }
 
   @override
-  Future<List<SyncItemRefreshResult>> refreshAll(Client client) async {
+  Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
     final ids = (await downloadIds(client)).toList();
     final result = List<SyncItemRefreshResult>();
 
@@ -76,7 +80,7 @@ class DepositSyncService extends SyncService<String> {
     do {
       var response = FindDto.fromJson(
         jsonDecode(
-          await fetch(client, 'deposits?page=$page&size=1'),
+            (await client.get('deposits?page=$page&size=1')).body,
         ),
       );
 
@@ -98,9 +102,9 @@ class DepositSyncService extends SyncService<String> {
     return result;
   }
 
-  Future<List<String>> downloadIds(Client client) async {
-    var response = await fetch(client, 'deposits/ids');
-    return List<String>.from(jsonDecode(response), growable: false);
+  Future<List<String>> downloadIds(ServerClient client) async {
+    var response = await client.get('deposits/ids');
+    return List<String>.from(jsonDecode(response.body), growable: false);
   }
 
   @override

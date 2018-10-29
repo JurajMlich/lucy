@@ -4,6 +4,7 @@ import 'package:android/dto/find_dto.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/model/user.dart';
 import 'package:android/repository/user_repository.dart';
+import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
 import 'package:http/http.dart';
@@ -17,7 +18,10 @@ class UserSyncService extends SyncService<String> {
   UserSyncService(this._userRepository);
 
   @override
-  Future<Null> sendInstruction(ServerInstruction instruction) async {}
+  Future<Null> sendInstruction(
+    ServerClient client,
+    ServerInstruction instruction,
+  ) async {}
 
   Future<SyncItemRefreshResult> processOne(dynamic rawUser) async {
     var user = await _userRepository.findById(rawUser['id']);
@@ -50,13 +54,16 @@ class UserSyncService extends SyncService<String> {
   }
 
   @override
-  Future<SyncItemRefreshResult> refreshOne(Client client, String identifier) async {
-    var response = await fetch(client, 'users/$identifier');
-    return await processOne(jsonDecode(response));
+  Future<SyncItemRefreshResult> refreshOne(
+    ServerClient client,
+    String identifier,
+  ) async {
+    var response = await client.get('users/$identifier');
+    return await processOne(jsonDecode(response.body));
   }
 
   @override
-  Future<List<SyncItemRefreshResult>> refreshAll(Client client) async {
+  Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
     // todo abstract this
     final ids = (await downloadIds(client)).toList();
     final result = List<SyncItemRefreshResult>();
@@ -66,7 +73,7 @@ class UserSyncService extends SyncService<String> {
     do {
       var response = FindDto.fromJson(
         jsonDecode(
-          await fetch(client, 'users?page=$page&size=1'),
+          (await client.get('users?page=$page&size=1')).body,
         ),
       );
 
@@ -88,9 +95,9 @@ class UserSyncService extends SyncService<String> {
     return result;
   }
 
-  Future<List<String>> downloadIds(Client client) async {
-    var response = await fetch(client, 'users/ids');
-    return List<String>.from(jsonDecode(response), growable: false);
+  Future<List<String>> downloadIds(ServerClient client) async {
+    var response = await client.get('users/ids');
+    return List<String>.from(jsonDecode(response.body), growable: false);
   }
 
   @override

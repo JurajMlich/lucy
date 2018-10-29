@@ -27,16 +27,24 @@ class SyncManager {
     }
     _executing = true;
 
-    var canDoIncrementalSync =
+    var doIncrementalSync =
         _sharedPreferences.getBool('fullSyncCompleted') ?? false;
 
-    await Synchronization(
-      _sharedPreferences,
-      _resolvedInstanceInstructionRepository,
-      _services,
-    ).execute(canDoIncrementalSync);
+    try {
+      await Synchronization(
+        _sharedPreferences,
+        _resolvedInstanceInstructionRepository,
+        _services,
+      ).execute(doIncrementalSync);
+    } catch(e) {
+      if(!doIncrementalSync){
+        await _sharedPreferences.setBool('fullSyncCompleted', false);
+      }
+      _executing = false;
+      rethrow;
+    }
 
-    _sharedPreferences.setBool('fullSyncCompleted', true);
+    await _sharedPreferences.setBool('fullSyncCompleted', true);
     _executing = false;
   }
 }

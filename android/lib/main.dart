@@ -1,4 +1,5 @@
 import 'package:android/database/database_migrations.dart';
+import 'package:android/exception/illegal_state_exception.dart';
 import 'package:android/lucy_app.dart';
 import 'package:android/redux/store.dart';
 import 'package:android/repository/deposit_repository.dart';

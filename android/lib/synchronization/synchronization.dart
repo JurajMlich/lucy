@@ -1,11 +1,11 @@
 import 'dart:convert';
 
+import 'package:android/config/config.dart';
 import 'package:android/exception/illegal_state_exception.dart';
 import 'package:android/repository/resolved_instruction_repository.dart';
+import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
-import 'package:http/http.dart';
-import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,6 +39,7 @@ class Synchronization {
   final Map<SyncItemType, SyncService> _serviceToTypeMap;
 
   final Set<_ItemToRefresh> _itemsToRefresh;
+
   // note: SyncItem has overridden hashCode and ==, so two items with the
   // same type and id are the same object from the point of view of the map
   final Map<SyncItem, _ItemToRefresh> _itemToWrapperMap;
@@ -59,7 +60,7 @@ class Synchronization {
     _logger.info(
       'Starting ${incremental ? 'incremental' : 'full'} synchronization.',
     );
-    final client = Client();
+    final client = ServerClient(Config.serverUrl);
 
     // this must be before _downloadAllData() as we want to download commands
     // that happened while full download in progress.
@@ -134,15 +135,16 @@ class Synchronization {
     }
 
     // sync done
-    _sharedPreferences.setInt(
+    await _sharedPreferences.setInt(
         'lastSync', findCommandsUntil.toUtc().millisecondsSinceEpoch);
-    _resolvedInstructionRepository.clear();
+    await _resolvedInstructionRepository.clear();
+    client.close();
     _logger.info('Synchronization done.');
   }
 
   /// Refresh failed items without parents. If any change was successful,
   /// return true. Otherwise, return false.
-  Future<bool> _refreshFailedItemsWithoutParents(Client client) async {
+  Future<bool> _refreshFailedItemsWithoutParents(ServerClient client) async {
     _logger.info('Downloading failed entities');
     var atLeastOne = false;
 
@@ -238,7 +240,7 @@ class Synchronization {
 
   /// Invoke refreshAll for every service and process result by
   /// _processRefreshResult.
-  Future<Null> _downloadAllData(Client client) async {
+  Future<Null> _downloadAllData(ServerClient client) async {
     _logger.info('Downloading all data');
     for (SyncService service in _serviceToTypeMap.values) {
       var metadataList = await service.refreshAll(client);
@@ -264,21 +266,16 @@ class Synchronization {
   /// sync is done). Thus, no action is going to be performed twice even if
   /// the application crashes.
   Future<dynamic> _downloadAndExecuteInstructions(
-    Client client,
+    ServerClient client,
     DateTime since,
     DateTime to,
   ) async {
     _logger.info('Downloading and executing instructions');
-    // todo(pull): move constant somewhere
-    var formatter = DateFormat("yyyy-MM-ddTHH:mm:ss");
-    // todo(push/pull): some communicator
     var response = await client.get(
-      'http://192.168.43.167:8080/instructions?from=${formatter.format(since.toUtc())}'
-          '&to=${formatter.format(to.toUtc())}',
+      'instructions?from=${ServerClient.dateFormat.format(since.toUtc())}'
+          '&to=${ServerClient.dateFormat.format(to.toUtc())}',
     );
-    var instructions = jsonDecode(
-      Utf8Decoder().convert(response.bodyBytes),
-    ) as List<dynamic>;
+    var instructions = jsonDecode(response.body) as List<dynamic>;
 
     // server tells us what resources have changed, but we have SyncItemTypes
     var resourceToSyncItemType = {
@@ -315,7 +312,7 @@ class Synchronization {
   }
 
   /// Send instructions to server (changes).
-  Future<Null> _sendInstructions(Client client) async {
+  Future<Null> _sendInstructions(ServerClient client) async {
     _logger.info('Sending instructions');
     // todo(push): send each instruction to corresponding REST endpoint
   }
