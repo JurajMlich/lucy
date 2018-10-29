@@ -1,5 +1,6 @@
 package eu.mlich.lucy.model
 
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.persistence.*
 
@@ -19,7 +20,7 @@ data class InstanceInstruction(
         val data: String,
 
         @Column(name = "creation_datetime")
-        val creationDatetime: OffsetDateTime,
+        val creationDatetime: LocalDateTime,
 
         @ManyToOne
         @JoinColumn(name = "instance_id")

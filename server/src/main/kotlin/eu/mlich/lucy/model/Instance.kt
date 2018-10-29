@@ -1,6 +1,6 @@
 package eu.mlich.lucy.model
 
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import javax.persistence.*
 
 @Entity
@@ -15,5 +15,5 @@ data class Instance(
         val authToken: String,
 
         @Column(name = "creation_datetime")
-        val creationDatetime: OffsetDateTime
+        val creationDatetime: LocalDateTime
 )

@@ -18,9 +18,8 @@ class User extends IdAware<String> {
       identical(this, other) ||
       other is User &&
           runtimeType == other.runtimeType &&
-          id == other.id &&
-          id != null;
+          id == other.id;
 
   @override
-  int get hashCode => id?.hashCode ?? super.hashCode;
+  int get hashCode => id.hashCode;
 }

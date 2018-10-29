@@ -1,17 +1,17 @@
 import 'dart:convert';
 
-import 'package:android/dto/find_dto.dart';
 import 'package:android/model/server_instruction.dart';
+import 'package:android/synchronization/sync_item.dart';
 import 'package:http/http.dart';
 
-abstract class SyncExecutor<ID> {
-  Future<List<ID>> downloadIds(Client client);
+abstract class SyncService<ID> {
+  SyncItemType get forType;
 
-  Future<FindDto> downloadData(Client client, int page);
+  Future<Null> clearData();
 
-  Future<dynamic> downloadOne(Client client, ID identifier);
+  Future<List<SyncItemRefreshResult>> refreshAll(Client client);
 
-  Future<Null> process(dynamic item);
+  Future<SyncItemRefreshResult> refreshOne(Client client, ID identifier);
 
   Future<Null> sendInstruction(ServerInstruction instruction);
 

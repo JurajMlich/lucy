@@ -38,7 +38,7 @@ class DepositService @Autowired constructor(
     fun save(dto: DepositDto): DepositDto {
         val entity = repository.save(convertToEntity(dto))
         dto.id = entity.publicKey
-        instanceInstructionService.refreshData(RESOURCE_NAME, entity.id.toString())
+        instanceInstructionService.refreshData(RESOURCE_NAME, entity.publicKey.toString())
         return dto
     }
 

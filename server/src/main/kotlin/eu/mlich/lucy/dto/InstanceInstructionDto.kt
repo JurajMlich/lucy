@@ -1,11 +1,11 @@
 package eu.mlich.lucy.dto
 
 import eu.mlich.lucy.model.InstanceInstructionType
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 
 data class InstanceInstructionDto(
         val id: Long,
         val type: InstanceInstructionType,
         val data: String,
-        val creationDatetime: OffsetDateTime
+        val creationDatetime: LocalDateTime
 )

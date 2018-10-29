@@ -44,7 +44,7 @@ class TransactionService @Autowired constructor(
     fun save(dto: TransactionDto): TransactionDto {
         val entity = repository.save(convertToEntity(dto))
         dto.id = entity.publicKey
-        instanceInstructionService.refreshData(RESOURCE_NAME, entity.id.toString())
+        instanceInstructionService.refreshData(RESOURCE_NAME, entity.publicKey.toString())
         return dto
     }
 

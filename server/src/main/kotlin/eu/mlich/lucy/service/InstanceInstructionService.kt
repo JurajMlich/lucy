@@ -10,6 +10,7 @@ import eu.mlich.lucy.repository.InstanceRepository
 import eu.mlich.lucy.model.Instance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import javax.transaction.Transactional
 
@@ -24,7 +25,7 @@ class InstanceInstructionService @Autowired constructor(
         instanceRepository.findAll().forEach {
             instanceInstructionRepository.save(InstanceInstruction(
                     type = InstanceInstructionType.REFRESH_DATA,
-                    creationDatetime = OffsetDateTime.now(),
+                    creationDatetime = LocalDateTime.now(),
                     data = objectMapper.writeValueAsString(RefreshDataInstanceInstructionData(resource, identifier)),
                     instance = it
             ))
@@ -36,7 +37,7 @@ class InstanceInstructionService @Autowired constructor(
         instanceRepository.findAll().forEach {
             instanceInstructionRepository.save(InstanceInstruction(
                     type = InstanceInstructionType.DELETE_DATA,
-                    creationDatetime = OffsetDateTime.now(),
+                    creationDatetime = LocalDateTime.now(),
                     data = objectMapper.writeValueAsString(DeleteDataInstanceInstructionData(resource, identifier)),
                     instance = it
             ))
@@ -44,7 +45,7 @@ class InstanceInstructionService @Autowired constructor(
     }
 
     @Transactional
-    fun findAllForInstance(instance: Instance): List<InstanceInstruction> {
-        return instanceInstructionRepository.findByInstanceOrderByCreationDatetime(instance)
+    fun findAllForInstance(instance: Instance, from: LocalDateTime, to: LocalDateTime): List<InstanceInstruction> {
+        return instanceInstructionRepository.findForInstance(instance, from, to)
     }
 }

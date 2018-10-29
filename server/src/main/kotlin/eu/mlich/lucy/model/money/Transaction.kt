@@ -1,6 +1,7 @@
 package eu.mlich.lucy.model.money
 
 import eu.mlich.lucy.model.User
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 import javax.persistence.*
@@ -37,7 +38,7 @@ data class Transaction(
         var value: Double,
 
         @Column(name = "execution_datetime")
-        var executionDatetime: OffsetDateTime?,
+        var executionDatetime: LocalDateTime?,
 
         @ManyToOne
         @JoinColumn(name = "creator_id")

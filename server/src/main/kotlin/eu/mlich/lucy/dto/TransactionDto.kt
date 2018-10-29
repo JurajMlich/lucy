@@ -1,7 +1,7 @@
 package eu.mlich.lucy.dto
 
 import eu.mlich.lucy.model.money.TransactionState
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
 import java.util.*
 
 /**
@@ -13,7 +13,7 @@ data class TransactionDto(
         var targetDepositId: UUID,
         var state: TransactionState,
         var value: Double,
-        var executionDatetime: OffsetDateTime?,
+        var executionDatetime: LocalDateTime?,
         val creatorId: UUID,
         var name: String? = null,
         var note: String? = null,
