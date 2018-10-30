@@ -1,4 +1,5 @@
-import 'package:android/ui/finances/finances_page.dart';
+import 'package:android/ui/finance/finances_page.dart';
+import 'package:android/ui/preferences/preferences_page.dart';
 import 'package:flutter/material.dart';
 
 class LucyRoute {
@@ -17,15 +18,15 @@ class LucyRoute {
 
 var routes = [
   LucyRoute(
-    name: 'Finances',
+    name: 'Finance',
     icon: Icons.euro_symbol,
-    path: '/finances',
-    target: FinancesPage(),
+    path: '/finance',
+    target: FinancePage(),
   ),
   LucyRoute(
     name: 'Preferences',
     icon: Icons.settings,
     path: '/preferences',
-    target: FinancesPage(),
+    target: PreferencesPage(),
   ),
 ];

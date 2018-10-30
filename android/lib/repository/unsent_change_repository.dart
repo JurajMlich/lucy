@@ -24,7 +24,7 @@ class PendingChangeRepository extends Repository<ServerInstruction, int> {
         );
 
   @override
-  ServerInstruction convertFromMap(Map<String, Object> data) {
+  Future<ServerInstruction> convertFromMap(Map<String, Object> data) async {
     return ServerInstruction()
       ..id = data[columnId]
       ..dateTime = DateTime.fromMillisecondsSinceEpoch(data[columnDateTime])
@@ -33,7 +33,7 @@ class PendingChangeRepository extends Repository<ServerInstruction, int> {
   }
 
   @override
-  Map<String, Object> convertToMap(ServerInstruction entity) {
+  Future<Map<String, Object>> convertToMap(ServerInstruction entity) async {
     return {
       columnId: entity.id,
       columnType: entity.type,

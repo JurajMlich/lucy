@@ -30,12 +30,16 @@ class SyncManager {
 
   /// Perform incremental sync if possible. Otherwise, perform full sync. If
   /// already performing, throws IllegalStateException.
-  Future<Null> synchronize() async {
+  Future<Null> synchronize({bool forceFullSync = false}) async {
     if (_executing) {
       throw IllegalStateException('Already executing');
     }
     _executing = true;
     _attempt++;
+
+    if (forceFullSync) {
+      await _sharedPreferences.setBool('fullSyncCompleted', false);
+    }
 
     var doIncrementalSync =
         _sharedPreferences.getBool('fullSyncCompleted') ?? false;
@@ -59,7 +63,7 @@ class SyncManager {
       ).execute(doIncrementalSync);
     } on UnauthorizedException {
       // try to synchronize one more time
-      if(_attempt > 2) {
+      if (_attempt > 2) {
         if (!doIncrementalSync) {
           await _sharedPreferences.setBool('fullSyncCompleted', false);
         }

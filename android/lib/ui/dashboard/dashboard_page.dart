@@ -1,141 +1,156 @@
-import 'package:android/redux/app/app_action.dart';
-import 'package:android/redux/app/app_state.dart';
-import 'package:android/redux/dasboard/dashboard_action.dart';
-import 'package:android/redux/dasboard/dashboard_state.dart';
+import 'package:android/lucy_container.dart';
 import 'package:android/routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_redux/flutter_redux.dart';
-import 'package:redux/redux.dart';
 
 class DashboardPage extends StatefulWidget {
-  final Store<AppState> store;
-
-  DashboardPage(this.store);
-
   @override
   _DashboardPageState createState() {
     return _DashboardPageState();
   }
 }
 
+class _Model {
+  double balance;
+  double todaySpent;
+  double todayMax;
+  double monthSpent;
+  double monthMax;
+
+  _Model({
+    @required this.balance,
+    @required this.todaySpent,
+    @required this.todayMax,
+    @required this.monthSpent,
+    @required this.monthMax,
+  });
+}
+
 class _DashboardPageState extends State<DashboardPage> {
+  _Model model;
+  bool synchronizing = false;
+
   @override
   void initState() {
     super.initState();
-    widget.store.dispatch(DashboardInitializeAction());
-  }
 
-  @override
-  void dispose() {
-    super.dispose();
-    widget.store.dispatch(DashboardDisposeAction());
+    model = _Model(
+        balance: 12344,
+        todaySpent: 1,
+        todayMax: 10,
+        monthSpent: 10,
+        monthMax: 100);
   }
 
   @override
   Widget build(BuildContext context) {
-    return StoreConnector<AppState, AppState>(
-      converter: (store) => store.state,
-      builder: (context, state) {
-        if (!state.dashboardState.initialized) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        var barItems = <Widget>[
-          Text("Lucy - your assistent"),
-        ];
+    if (model == null) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    var barItems = <Widget>[
+      Text("Lucy - your assistent"),
+    ];
 
-        if (state.synchronizing) {
-          barItems.add(
-            Expanded(
+    if (synchronizing) {
+      barItems.add(
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: barItems,
+        ),
+        actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.sync),
+              onPressed: () async {
+                setState(() {
+                  synchronizing = true;
+                });
+                await LucyContainer().syncManager.synchronize();
+                setState(() {
+                  synchronizing = false;
+                });
+              }),
+        ],
+      ),
+      body: Column(
+        children: <Widget>[
+          Container(
+            height: 140,
+            child: InkWell(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  )
+                children: [
+                  _buildGridItem(routes[0], Colors.indigo),
+                  _buildFinanceTile(),
                 ],
               ),
+              onTap: () => Navigator.pushNamed(context, '/finance'),
             ),
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Row(
-              children: barItems,
-            ),
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(Icons.sync),
-                onPressed: () => widget.store.dispatch(AppSynchronizeAction()),
-              )
-            ],
           ),
-          body: Column(
-            children: <Widget>[
-              Container(
-                height: 140,
-                child: InkWell(
-                  child: Row(
-                    children: [
-                      _buildGridItem(routes[0], Colors.indigo),
-                      _buildFinanceTile(state.dashboardState),
-                    ],
-                  ),
+          Container(
+            height: 140,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                InkWell(
+                  child: _buildGridItem(routes[1], Colors.black),
                   onTap: () => null,
-                ),
-              ),
-              Container(
-                height: 140,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    InkWell(
-                      child: _buildGridItem(routes[1], Colors.black),
-                      onTap: () => null,
-                    )
-                  ],
-                ),
-              )
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildGridItem(LucyRoute route, Color color) {
-    return Card(
-      color: color,
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: <Widget>[
-            Expanded(
-              child: Icon(
-                route.icon,
-                size: 40,
-              ),
+                )
+              ],
             ),
-            Text(
-              route.name,
-              style: TextStyle(fontSize: 15),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
 
-  Widget _buildFinanceTile(DashboardState state) {
+  Widget _buildGridItem(LucyRoute route, Color color) {
+    return InkWell(
+      child: Card(
+        color: color,
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                child: Icon(
+                  route.icon,
+                  size: 40,
+                ),
+              ),
+              Text(
+                route.name,
+                style: TextStyle(fontSize: 15),
+              )
+            ],
+          ),
+        ),
+      ),
+      onTap: () => Navigator.pushNamed(context, route.path),
+    );
+  }
+
+  Widget _buildFinanceTile() {
     return Expanded(
       child: Card(
         child: Row(
@@ -162,13 +177,12 @@ class _DashboardPageState extends State<DashboardPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Text(state.todaySpent.toString() + '€'),
-                        Text((state.todayMax - state.todaySpent).toString() +
+                        Text(model.todaySpent.toString() + '€'),
+                        Text((model.todayMax - model.todaySpent).toString() +
                             '€'),
                         Divider(),
-                        Text((state.todayMax - state.todaySpent).toString() +
-                            '€'),
-                        Text((state.todayMax - state.todaySpent).toString() +
+                        Text(model.monthSpent.toString() + '€'),
+                        Text((model.monthMax - model.monthSpent).toString() +
                             '€'),
                       ],
                     ),
@@ -184,7 +198,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: <Widget>[
                   Text('current balance:'),
                   Text(
-                    state.balance.toString() + '€',
+                    model.balance.toString() + '€',
                     style: TextStyle(fontSize: 20),
                   ),
                   Divider(

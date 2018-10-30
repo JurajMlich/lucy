@@ -13,7 +13,7 @@ abstract class Repository<T extends IdAware<ID>, ID> {
   Repository(this._database, this._tableName, this._idColumn, this._columns);
 
   Future<T> create(T entity) async {
-    Object id = await _database.insert(_tableName, convertToMap(entity));
+    Object id = await _database.insert(_tableName, await convertToMap(entity));
 
     if (id is ID) {
       entity.id = id;
@@ -25,7 +25,7 @@ abstract class Repository<T extends IdAware<ID>, ID> {
   Future<T> update(T entity) async {
     await _database.update(
       _tableName,
-      convertToMap(entity),
+      await convertToMap(entity),
       where: '$_idColumn = ?',
       whereArgs: <Object>[entity.id],
     );
@@ -43,7 +43,8 @@ abstract class Repository<T extends IdAware<ID>, ID> {
   Future<List<T>> findAll() async {
     final results = await _database.query(_tableName, columns: _columns);
 
-    return results.map((result) => convertFromMap(result)).toList();
+    return (await Future.wait(results.map((result) => convertFromMap(result))))
+        .toList();
   }
 
   Future<Null> deleteAll() async {
@@ -64,7 +65,7 @@ abstract class Repository<T extends IdAware<ID>, ID> {
     return null;
   }
 
-  T convertFromMap(Map<String, Object> data);
+  Future<T> convertFromMap(Map<String, Object> data);
 
-  Map<String, Object> convertToMap(T entity);
+  Future<Map<String, Object>> convertToMap(T entity);
 }

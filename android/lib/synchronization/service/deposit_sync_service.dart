@@ -37,15 +37,22 @@ class DepositSyncService extends SyncService<String> {
 
     deposit
       ..name = rawDeposit['name']
-      ..ownerId = rawDeposit['ownerId']
+      ..ownersIds = Set()
       ..balance = rawDeposit['balance'];
 
-    if ((await _userRepository.findById(deposit.ownerId)) == null) {
-      return SyncItemRefreshResult(
-        SyncItem(SyncItemType.deposit, deposit.id),
-        SyncItemRefreshResultState.referenceMissing,
-        Set.from([SyncItem(SyncItemType.user, deposit.ownerId)]),
-      );
+    var missingSyncItems = Set<SyncItem>();
+
+    for (var ownerId in rawDeposit['ownersIds']) {
+      if ((await _userRepository.findById(ownerId)) == null) {
+        missingSyncItems.add(SyncItem(SyncItemType.user, ownerId));
+      } else {
+        deposit.ownersIds.add(ownerId);
+      }
+    }
+
+    if (missingSyncItems.length > 0) {
+      return SyncItemRefreshResult(SyncItem(SyncItemType.deposit, deposit.id),
+          SyncItemRefreshResultState.referenceMissing, missingSyncItems);
     }
 
     if (creating) {

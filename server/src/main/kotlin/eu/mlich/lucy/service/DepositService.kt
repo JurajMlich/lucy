@@ -43,7 +43,9 @@ class DepositService @Autowired constructor(
     }
 
     fun convertToEntity(dto: DepositDto): Deposit { // todo throws
-        val owner = userRepository.findOneByPublicKey(dto.ownerId).orElseThrow { IllegalArgumentException() }
+        val owners = dto.ownersIds.map {
+            userRepository.findOneByPublicKey(it).orElseThrow { IllegalArgumentException() }
+        }.toHashSet()
         val accessibleBy = dto.accessibleByUsersIds.map {
             userRepository.findOneByPublicKey(it).orElseThrow { IllegalArgumentException() }
         }.toHashSet()
@@ -57,16 +59,16 @@ class DepositService @Autowired constructor(
                 original.balance = dto.balance
                 original.disabled = dto.disabled
                 original.name = dto.name
-                original.owner = owner
+                original.owners = owners
                 original.type = dto.type
                 return original
             }
         }
 
-        return Deposit(null, dto.name, dto.balance, dto.disabled, dto.type, owner, accessibleBy, id ?: UUID.randomUUID())
+        return Deposit(null, dto.name, dto.balance, dto.disabled, dto.type, owners, accessibleBy, id ?: UUID.randomUUID())
     }
 
     fun convertToDto(entity: Deposit): DepositDto {
-        return DepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.type, entity.owner.publicKey, entity.accessibleBy.map { it.publicKey }.toSet())
+        return DepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.type, entity.owners.map { it.publicKey }.toSet(), entity.accessibleBy.map { it.publicKey }.toSet())
     }
 }

@@ -25,7 +25,7 @@ class UserRepository extends Repository<User, String> {
         );
 
   @override
-  User convertFromMap(Map<String, Object> data) {
+  Future<User> convertFromMap(Map<String, Object> data) async {
     return User(data[columnId])
       ..email = data[columnEmail]
       ..firstName = data[columnFirstName]
@@ -33,7 +33,7 @@ class UserRepository extends Repository<User, String> {
   }
 
   @override
-  Map<String, Object> convertToMap(User entity) {
+  Future<Map<String, Object>> convertToMap(User entity) async {
     return {
       columnId: entity.id,
       columnEmail: entity.email,

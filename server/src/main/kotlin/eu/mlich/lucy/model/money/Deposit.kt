@@ -31,9 +31,13 @@ data class Deposit(
         @Enumerated(EnumType.STRING)
         var type: DepositType,
 
-        @ManyToOne
-        @JoinColumn(name = "owner_id")
-        var owner: User,
+        @ManyToMany(cascade = [CascadeType.ALL])
+        @JoinTable(
+                name = "deposit_owner",
+                joinColumns = [JoinColumn(name = "deposit_id")],
+                inverseJoinColumns = [(JoinColumn(name = "user_id"))]
+        )
+        var owners: Set<User>,
 
         @ManyToMany(cascade = [CascadeType.ALL])
         @JoinTable(

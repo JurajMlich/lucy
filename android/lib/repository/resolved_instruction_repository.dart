@@ -5,9 +5,9 @@ class ResolvedInstructionRepository {
 
   static const String columnId = 'id';
 
-  final Database _database;
+  final DatabaseExecutor _database;
 
-  ResolvedInstructionRepository(Database database) : _database = database;
+  ResolvedInstructionRepository(DatabaseExecutor database) : _database = database;
 
   Future<Null> clear() async {
     await _database.delete(tableName);

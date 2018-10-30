@@ -6,7 +6,7 @@ part 'deposit.g.dart';
 @JsonSerializable()
 class Deposit extends IdAware<String> {
   String id;
-  String ownerId;
+  Set<String> ownersIds;
   String name;
   double balance;
 
@@ -14,20 +14,19 @@ class Deposit extends IdAware<String> {
 
   factory Deposit.fromJson(Map<String, dynamic> json) =>
       _$DepositFromJson(json);
-  Map<String, dynamic> toJson() => _$DepositToJson(this);
 
+  Map<String, dynamic> toJson() => _$DepositToJson(this);
 
   @override
   String toString() {
-    return 'Deposit{id: $id, ownerId: $ownerId, name: $name, balance: $balance}';
+    return 'Deposit{id: $id, ownersId: $ownersIds, name: $name, balance: '
+        '$balance}';
   }
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is Deposit &&
-              runtimeType == other.runtimeType &&
-              id == other.id;
+      other is Deposit && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

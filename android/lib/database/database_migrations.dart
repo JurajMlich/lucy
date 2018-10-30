@@ -25,13 +25,19 @@ List<String> buildMigrations({int oldVersion, @required int newVersion}) {
     migrations.add('''create table `${DepositRepository.tableName}` (
           ${DepositRepository.columnId} text primary key, 
           ${DepositRepository.columnName} text, 
-          ${DepositRepository.columnOwnerId} text, 
           ${DepositRepository.columnBalance} real 
+          )''');
+
+    migrations.add('''create table `${DepositRepository.tableNameOwner}` (
+          ${DepositRepository.ownerColumnUserId} text primary key, 
+          ${DepositRepository.ownerColumnDepositId} text
           )''');
 
     migrations.add('''create table `${ResolvedInstructionRepository.tableName}` (
           ${ResolvedInstructionRepository.columnId} integer primary key
           )''');
+
+    // todo: indexes and foreign keys
   }
 
   return migrations;
