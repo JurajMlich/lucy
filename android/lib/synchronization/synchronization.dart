@@ -216,11 +216,15 @@ class Synchronization {
       if (_itemToWrapperMap.containsKey(result.item)) {
         var wrapper = _itemToWrapperMap[result.item];
 
-        // the actions below are crucial as in next iteration, it frees items
+        // the action below is crucial as in next iteration, it frees items
         // that depended on it to be refreshed if they have no other references
         wrapper.children.forEach((child) {
           child.parents.remove(wrapper);
         });
+
+        // an item might have gotten updated earlier than the parent (if it
+        // was changed on server and no longer depends on it), so we
+        // unregister it in the parent as well
         wrapper.parents.forEach((parent) {
           parent.children.remove(wrapper);
         });

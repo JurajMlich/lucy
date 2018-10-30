@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:android/dto/find_dto.dart';
 import 'package:android/exception/forbidden_exception.dart';
 import 'package:android/exception/not_found_exception.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/repository/deposit_repository.dart';
 import 'package:android/repository/user_repository.dart';
+import 'package:android/synchronization/page_downloader.dart';
 import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
@@ -95,39 +95,20 @@ class DepositSyncService extends SyncService<String> {
 
   @override
   Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
-    final ids = (await downloadIds(client)).toList();
     final result = List<SyncItemRefreshResult>();
+    final pager = PageDownloader(client, 'deposits', 50);
 
-    var pages = 0;
-    var page = 0;
-    do {
-      var response = FindDto.fromJson(
-        jsonDecode(
-          (await client.get('deposits?page=$page&size=1')).body,
-        ),
-      );
-
-      for (dynamic item in response.content) {
+    while (pager.hasNextPage()) {
+      for (dynamic item in await pager.nextPage()) {
         result.add(await _processOne(item));
-        if (ids.contains(item['id'])) {
-          ids.remove(item['id']);
-        }
       }
+    }
 
-      pages = response.totalPages;
-      page++;
-    } while (page < pages);
-
-    for (String id in ids) {
+    for (dynamic id in pager.missingItemsIds) {
       result.add(await refreshOne(client, id));
     }
 
     return result;
-  }
-
-  Future<List<String>> downloadIds(ServerClient client) async {
-    var response = await client.get('deposits/ids');
-    return List<String>.from(jsonDecode(response.body), growable: false);
   }
 
   @override

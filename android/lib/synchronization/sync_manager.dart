@@ -10,7 +10,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Class managing synchronization. Prevents two synchronizations happening
-/// at the same time. Performs incremental sync when possible.
+/// at the same time. Performs incremental sync when possible. Shows proper
+/// notifications.
 class SyncManager {
   final List<SyncService> _services;
   final ResolvedInstructionRepository _resolvedInstanceInstructionRepository;
