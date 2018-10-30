@@ -1,13 +1,14 @@
 import 'dart:convert';
 
 import 'package:android/dto/find_dto.dart';
+import 'package:android/exception/forbidden_exception.dart';
+import 'package:android/exception/not_found_exception.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/model/user.dart';
 import 'package:android/repository/user_repository.dart';
 import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
-import 'package:http/http.dart';
 
 class UserSyncService extends SyncService<String> {
   UserRepository _userRepository;
@@ -23,7 +24,7 @@ class UserSyncService extends SyncService<String> {
     ServerInstruction instruction,
   ) async {}
 
-  Future<SyncItemRefreshResult> processOne(dynamic rawUser) async {
+  Future<SyncItemRefreshResult> _processOne(dynamic rawUser) async {
     var user = await _userRepository.findById(rawUser['id']);
     var creating = false;
 
@@ -53,13 +54,35 @@ class UserSyncService extends SyncService<String> {
     );
   }
 
+  Future<SyncItemRefreshResult> _deleteOne(String identifier) async {
+    var user = await _userRepository.findById(identifier);
+
+    if (user != null) {
+      await _userRepository.delete(user);
+    }
+
+    return SyncItemRefreshResult(
+      SyncItem(SyncItemType.user, identifier),
+      SyncItemRefreshResultState.refreshed,
+      Set(),
+    );
+  }
+
   @override
   Future<SyncItemRefreshResult> refreshOne(
     ServerClient client,
     String identifier,
   ) async {
-    var response = await client.get('users/$identifier');
-    return await processOne(jsonDecode(response.body));
+    try {
+      var response = await client.get('users/$identifier');
+      return await _processOne(jsonDecode(response.body));
+    } on ForbiddenException {
+      // if lost rights to see the item, delete it
+      return await _deleteOne(identifier);
+    } on NotFoundException {
+      // if deleted on server, delete it here as well
+      return await _deleteOne(identifier);
+    }
   }
 
   @override
@@ -78,7 +101,7 @@ class UserSyncService extends SyncService<String> {
       );
 
       for (dynamic item in response.content) {
-        result.add(await processOne(item));
+        result.add(await _processOne(item));
         if (ids.contains(item['id'])) {
           ids.remove(item['id']);
         }

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:android/dto/find_dto.dart';
+import 'package:android/exception/forbidden_exception.dart';
+import 'package:android/exception/not_found_exception.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/repository/deposit_repository.dart';
@@ -8,7 +10,6 @@ import 'package:android/repository/user_repository.dart';
 import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
-import 'package:http/http.dart';
 
 class DepositSyncService extends SyncService<String> {
   DepositRepository _depositRepository;
@@ -25,7 +26,7 @@ class DepositSyncService extends SyncService<String> {
     ServerInstruction instruction,
   ) async {}
 
-  Future<SyncItemRefreshResult> processOne(dynamic rawDeposit) async {
+  Future<SyncItemRefreshResult> _processOne(dynamic rawDeposit) async {
     var deposit = await _depositRepository.findById(rawDeposit['id']);
     var creating = false;
 
@@ -63,11 +64,33 @@ class DepositSyncService extends SyncService<String> {
     );
   }
 
+  Future<SyncItemRefreshResult> _deleteOne(String identifier) async {
+    var deposit = await _depositRepository.findById(identifier);
+
+    if (deposit != null) {
+      await _depositRepository.delete(deposit);
+    }
+
+    return SyncItemRefreshResult(
+      SyncItem(SyncItemType.deposit, identifier),
+      SyncItemRefreshResultState.refreshed,
+      Set(),
+    );
+  }
+
   @override
   Future<SyncItemRefreshResult> refreshOne(
       ServerClient client, String identifier) async {
-    var response = await client.get('deposits/$identifier');
-    return await processOne(jsonDecode(response.body));
+    try {
+      var response = await client.get('deposits/$identifier');
+      return await _processOne(jsonDecode(response.body));
+    } on ForbiddenException {
+      // if lost rights to see the item, delete it
+      return await _deleteOne(identifier);
+    } on NotFoundException {
+      // if deleted on server, delete it here as well
+      return await _deleteOne(identifier);
+    }
   }
 
   @override
@@ -80,12 +103,12 @@ class DepositSyncService extends SyncService<String> {
     do {
       var response = FindDto.fromJson(
         jsonDecode(
-            (await client.get('deposits?page=$page&size=1')).body,
+          (await client.get('deposits?page=$page&size=1')).body,
         ),
       );
 
       for (dynamic item in response.content) {
-        result.add(await processOne(item));
+        result.add(await _processOne(item));
         if (ids.contains(item['id'])) {
           ids.remove(item['id']);
         }

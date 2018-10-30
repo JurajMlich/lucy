@@ -30,7 +30,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// download items that do not depend on anything first.
 ///
 /// Edge cases are also addressed.
-// todo(pull): unauthorized & not found
 class Synchronization {
   final Logger _logger = new Logger('Synchronization');
 
@@ -71,10 +70,10 @@ class Synchronization {
       var lastSyncInt = _sharedPreferences.getInt('lastSync');
       if (lastSyncInt == null) {
         incremental = false;
+      } else {
+        findCommandsSince =
+            DateTime.fromMillisecondsSinceEpoch(lastSyncInt, isUtc: true);
       }
-
-      findCommandsSince =
-          DateTime.fromMillisecondsSinceEpoch(lastSyncInt, isUtc: true);
     }
 
     if (!incremental) {

@@ -5,6 +5,7 @@ import 'package:android/redux/store.dart';
 import 'package:android/repository/deposit_repository.dart';
 import 'package:android/repository/resolved_instruction_repository.dart';
 import 'package:android/repository/user_repository.dart';
+import 'package:android/service/notification/notification_service.dart';
 import 'package:android/synchronization/service/deposit_sync_service.dart';
 import 'package:android/synchronization/service/user_sync_service.dart';
 import 'package:android/synchronization/sync_manager.dart';
@@ -22,10 +23,12 @@ Future<void> main() async {
   });
 
   var sharedPreferences = await SharedPreferences.getInstance();
+  var notificationService = NotificationService();
 
   Database database = await _prepareDatabase();
   SyncManager syncManager = await _prepareSyncManager(
     sharedPreferences,
+    notificationService,
     database,
   );
 
@@ -36,6 +39,7 @@ Future<void> main() async {
 
 Future<SyncManager> _prepareSyncManager(
   SharedPreferences sharedPreferences,
+  NotificationService notificationService,
   Database database,
 ) async {
   var depositRepository = DepositRepository(database);
@@ -43,10 +47,11 @@ Future<SyncManager> _prepareSyncManager(
 
   return SyncManager(
     sharedPreferences,
+    notificationService,
     ResolvedInstructionRepository(database),
     [
-      DepositSyncService(depositRepository, userRepository),
       UserSyncService(userRepository),
+      DepositSyncService(depositRepository, userRepository),
     ],
   );
 }
