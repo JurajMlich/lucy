@@ -1,8 +1,8 @@
 package eu.mlich.lucy.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import eu.mlich.lucy.dto.instructions_data.DeleteDataInstanceInstructionData
-import eu.mlich.lucy.dto.instructions_data.RefreshDataInstanceInstructionData
+import eu.mlich.lucy.dto.instructionsdata.DeleteDataInstanceInstructionData
+import eu.mlich.lucy.dto.instructionsdata.RefreshDataInstanceInstructionData
 import eu.mlich.lucy.model.InstanceInstruction
 import eu.mlich.lucy.model.InstanceInstructionType
 import eu.mlich.lucy.repository.InstanceInstructionRepository
@@ -11,7 +11,6 @@ import eu.mlich.lucy.model.Instance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import javax.transaction.Transactional
 
 @Service

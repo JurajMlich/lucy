@@ -10,6 +10,8 @@ import 'package:android/synchronization/page_downloader.dart';
 import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
+import 'package:android/utils/enum_utils.dart';
+import 'package:android/utils/string_utils.dart';
 
 class DepositSyncService extends SyncService<String> {
   DepositRepository _depositRepository;
@@ -38,7 +40,13 @@ class DepositSyncService extends SyncService<String> {
     deposit
       ..name = rawDeposit['name']
       ..ownersIds = Set()
-      ..balance = rawDeposit['balance'];
+      ..accessibleByUsersIds = Set()
+      ..balance = rawDeposit['balance']
+      ..disabled = rawDeposit['disabled']
+      ..type = stringToEnum(
+        DepositType.values,
+        underscoreToCamelCase(rawDeposit['type']),
+      );
 
     var missingSyncItems = Set<SyncItem>();
 
@@ -47,6 +55,14 @@ class DepositSyncService extends SyncService<String> {
         missingSyncItems.add(SyncItem(SyncItemType.user, ownerId));
       } else {
         deposit.ownersIds.add(ownerId);
+      }
+    }
+
+    for (var userId in rawDeposit['accessibleByUsersIds']) {
+      if ((await _userRepository.findById(userId)) == null) {
+        missingSyncItems.add(SyncItem(SyncItemType.user, userId));
+      } else {
+        deposit.accessibleByUsersIds.add(userId);
       }
     }
 

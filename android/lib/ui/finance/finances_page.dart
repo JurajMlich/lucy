@@ -1,6 +1,7 @@
 import 'package:android/lucy_container.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/repository/deposit_repository.dart';
+import 'package:android/ui/finance/transaction/transaction_edit_page.dart';
 import 'package:flutter/material.dart';
 
 class FinancePage extends StatefulWidget {
@@ -17,8 +18,18 @@ class _FinancePageState extends State<FinancePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Deposits'),
-        actions: <Widget>[],
+        title: Text('Finance overview'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TransactionEditPage()),
+              );
+            },
+          )
+        ],
       ),
       body: _buildBody(context),
     );
@@ -29,11 +40,22 @@ class _FinancePageState extends State<FinancePage> {
     super.initState();
 
     var depositRepository = LucyContainer().getRepository<DepositRepository>();
+//    var transactionCategoryRepository = LucyContainer()
+//        .getRepository<TransactionCategoryRepository>();
+//    var moneyTransactionRepository = LucyContainer()
+//        .getRepository<MoneyTransactionRepository>();
     depositRepository.findAll().then((deposits) {
-      setState((){
+      setState(() {
         _deposits = deposits;
       });
     });
+//    moneyTransactionRepository.findAll().then((transactions) {
+//      transactions.toString();
+//    });
+//
+//    transactionCategoryRepository.findAll().then((categories) {
+//      categories.toString();
+//    });
   }
 
   Widget _buildBody(BuildContext context) {
@@ -47,7 +69,9 @@ class _FinancePageState extends State<FinancePage> {
       itemCount: _deposits.length,
       itemBuilder: (context, index) {
         return InkWell(
-            child: Text(_deposits[index].name),
+            child: Text(_deposits[index].name +
+                ' ' +
+                _deposits[index].balance.toString()),
             onTap: () {
               Navigator.pushNamed(context, '/deposits');
             });

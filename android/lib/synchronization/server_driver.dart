@@ -11,6 +11,15 @@ import 'package:intl/intl.dart';
 
 // todo: auth
 
+DateTime parseServerDateTime(String dateTime) {
+  if (dateTime == null) {
+    return null;
+  }
+
+  // plus z so that it thinks it is in UTC
+  return DateTime.parse(dateTime + 'Z').toLocal();
+}
+
 /// Client used for communication between application and server.
 class ServerClient {
   /// Date format to be used for exchanging information.

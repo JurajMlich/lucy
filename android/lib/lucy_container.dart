@@ -1,11 +1,15 @@
 import 'package:android/database/database_migrations.dart';
 import 'package:android/exception/illegal_state_exception.dart';
 import 'package:android/repository/deposit_repository.dart';
+import 'package:android/repository/money_transaction_repository.dart';
 import 'package:android/repository/resolved_instruction_repository.dart';
+import 'package:android/repository/transaction_category_repository.dart';
 import 'package:android/repository/unsent_change_repository.dart';
 import 'package:android/repository/user_repository.dart';
 import 'package:android/service/notification/notification_service.dart';
 import 'package:android/synchronization/service/deposit_sync_service.dart';
+import 'package:android/synchronization/service/transaction_category_sync_service.dart';
+import 'package:android/synchronization/service/transaction_sync_service.dart';
 import 'package:android/synchronization/service/user_sync_service.dart';
 import 'package:android/synchronization/sync_manager.dart';
 import 'package:path/path.dart';
@@ -41,6 +45,10 @@ class LucyContainer {
     _repositories = Map();
     _repositories[UserRepository] = UserRepository(_database);
     _repositories[DepositRepository] = DepositRepository(_database);
+    _repositories[MoneyTransactionRepository] =
+        MoneyTransactionRepository(_database);
+    _repositories[TransactionCategoryRepository] =
+        TransactionCategoryRepository(_database);
     _repositories[ResolvedInstructionRepository] =
         ResolvedInstructionRepository(_database);
     _repositories[PendingChangeRepository] = PendingChangeRepository(_database);
@@ -102,6 +110,15 @@ class LucyContainer {
           _repositories[DepositRepository],
           _repositories[UserRepository],
         ),
+        TransactionCategorySyncService(
+          _repositories[TransactionCategoryRepository],
+        ),
+        TransactionSyncService(
+          _repositories[DepositRepository],
+          _repositories[UserRepository],
+          _repositories[MoneyTransactionRepository],
+          _repositories[TransactionCategoryRepository],
+        )
       ],
     );
   }

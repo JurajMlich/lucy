@@ -1,4 +1,4 @@
-package eu.mlich.lucy.dto.instructions_data
+package eu.mlich.lucy.dto.instructionsdata
 
 data class DeleteDataInstanceInstructionData(
         val resource: String,

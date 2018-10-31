@@ -2,6 +2,8 @@
 enum SyncItemType {
   user,
   deposit,
+  transaction,
+  transactionCategory,
 }
 
 /// State of refresh.
@@ -22,23 +24,23 @@ class SyncItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-          other is SyncItem &&
-              runtimeType == other.runtimeType &&
-              type == other.type &&
-              id == other.id;
+      other is SyncItem &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          id == other.id;
 
   @override
-  int get hashCode =>
-      type.hashCode ^
-      id.hashCode;
+  int get hashCode => type.hashCode ^ id.hashCode;
 }
 
 /// Result of refresh action of an item.
 class SyncItemRefreshResult {
   /// Item attempted to be refreshed.
   SyncItem item;
+
   /// State of refresh.
   SyncItemRefreshResultState state;
+
   /// In case of refresh being unsuccessful as some other items need to be
   /// refreshed, these are the other items.
   Set<SyncItem> missingReferences;
@@ -49,4 +51,3 @@ class SyncItemRefreshResult {
     this.missingReferences,
   );
 }
-

@@ -7,8 +7,11 @@ part 'deposit.g.dart';
 class Deposit extends IdAware<String> {
   String id;
   Set<String> ownersIds;
+  Set<String> accessibleByUsersIds;
   String name;
   double balance;
+  bool disabled;
+  DepositType type;
 
   Deposit(this.id);
 
@@ -19,8 +22,7 @@ class Deposit extends IdAware<String> {
 
   @override
   String toString() {
-    return 'Deposit{id: $id, ownersId: $ownersIds, name: $name, balance: '
-        '$balance}';
+    return 'Deposit{id: $id, ownersIds: $ownersIds, accessibleByUsersIds: $accessibleByUsersIds, name: $name, balance: $balance, disabled: $disabled, type: $type}';
   }
 
   @override
@@ -30,4 +32,11 @@ class Deposit extends IdAware<String> {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+enum DepositType {
+  @JsonValue('CASH')
+  cash,
+@JsonValue('BANK_ACCOUNT')
+  bankAccount,
 }

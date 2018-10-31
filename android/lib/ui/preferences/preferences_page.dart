@@ -9,6 +9,11 @@ class PreferencesPage extends StatefulWidget {
 }
 
 class _PreferencesPageState extends State<PreferencesPage> {
+  // todo:
+  // 1. user credentials
+  // 2. force full sync
+  // 3. month spending goal
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -16,10 +21,15 @@ class _PreferencesPageState extends State<PreferencesPage> {
         title: Text('Preferences'),
         actions: <Widget>[],
       ),
-      body: FlatButton(
-        child: Text('Force full sync'),
-        onPressed: () =>
-            LucyContainer().syncManager.synchronize(forceFullSync: true),
+      body: Column(
+        children: <Widget>[
+          FlatButton(
+            child: Text('Force full sync'),
+            onPressed: () =>
+                LucyContainer().syncManager.synchronize(forceFullSync: true),
+          ),
+          TextField()
+        ],
       ),
     );
   }
