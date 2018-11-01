@@ -1,3 +1,4 @@
+import 'package:android/config/config.dart';
 import 'package:android/lucy_container.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/model/finance_transaction.dart';
@@ -7,10 +8,11 @@ import 'package:android/repository/finance_transaction_category_repository.dart'
 import 'package:android/repository/finance_transaction_repository.dart';
 import 'package:android/ui/finance/category/finance_transaction_categories_pick_page.dart';
 import 'package:android/ui/finance/deposit/finance_deposit_list_page.dart';
+import 'package:android/ui/finance/transaction/finance_transaction_state_list_page.dart';
+import 'package:android/ui/flushbar_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_object_form_field/flutter_object_form_field.dart';
-import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 class FinanceTransactionEditPage extends StatefulWidget {
@@ -24,7 +26,8 @@ class FinanceTransactionEditPage extends StatefulWidget {
   }
 }
 
-class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage> {
+class _FinanceTransactionEditPageState
+    extends State<FinanceTransactionEditPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final String transactionId;
 
@@ -33,6 +36,11 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
   FinanceTransactionCategoryRepository transactionCategoryRepository;
 
   FinanceTransaction transaction;
+  FinanceDeposit initialSourceDeposit;
+  FinanceDeposit initialTargetDeposit;
+  Set<FinanceTransactionCategory> initialCategories;
+
+  ValueNotifier<DateTime> executionDatetimeController;
 
   _FinanceTransactionEditPageState(this.transactionId) {
     depositRepository =
@@ -55,26 +63,10 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
       body: _buildBody(context),
       floatingActionButton: FloatingActionButton(
         child: Icon(transactionId == null ? Icons.done : Icons.save),
-        onPressed: () async {
-          if (_formKey.currentState.validate()) {
-            _formKey.currentState.save();
-            if (transactionId == null) {
-              await moneyTransactionRepository.create(transaction);
-            } else {
-              await moneyTransactionRepository.update(transaction);
-            }
-
-            Navigator.pop(context);
-          }
-        },
+        onPressed: _save,
       ),
     );
   }
-
-  FinanceDeposit sourceDeposit;
-  FinanceDeposit targetDeposit;
-
-  Set<FinanceTransactionCategory> categories;
 
   @override
   void initState() {
@@ -87,26 +79,68 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
       transaction.creatorId = '58080d96-bd71-472c-805e-e1e0eea852ee';
       transaction.categoriesIds = Set();
 
-      categories = Set();
+      initialCategories = Set();
+      executionDatetimeController =
+          ValueNotifier(transaction.executionDatetime);
     } else {
       _loadTransaction(transactionId);
     }
   }
 
+  Future<Null> _save() async {
+    if (_formKey.currentState.validate()) {
+      _formKey.currentState.save();
+
+      var errorMessage = _validate();
+
+      if (errorMessage != null) {
+        FlushbarService().show(FlushType.ERROR, errorMessage, context);
+        return;
+      }
+
+      if (transactionId == null) {
+        await moneyTransactionRepository.create(transaction);
+      } else {
+        await moneyTransactionRepository.update(transaction);
+      }
+
+      Navigator.pop(context, transaction.id);
+    } else {
+      FlushbarService().show(
+          FlushType.ERROR,
+          'The form contains errors'
+          '.',
+          context);
+    }
+  }
+
+  String _validate() {
+    if (transaction.sourceDepositId == null &&
+        transaction.targetDepositId == null) {
+      return 'You must set either source deposit or target deposit';
+    }
+
+    return null;
+  }
+
   Future<Null> _loadTransaction(String id) async {
     transaction = await moneyTransactionRepository.findById(this.transactionId);
 
-    sourceDeposit = transaction.sourceDepositId == null
-        ? null
-        : await depositRepository.findById(transaction.sourceDepositId);
+    if (transaction.sourceDepositId != null) {
+      initialSourceDeposit =
+          await depositRepository.findById(transaction.sourceDepositId);
+    }
+    if (transaction.targetDepositId != null) {
+      initialTargetDeposit =
+          await depositRepository.findById(transaction.targetDepositId);
+    }
 
-    targetDeposit =
-        await depositRepository.findById(transaction.targetDepositId);
-
-    categories = (await Future.wait(transaction.categoriesIds.map(
+    initialCategories = (await Future.wait(transaction.categoriesIds.map(
             (categoryId) =>
                 transactionCategoryRepository.findById(categoryId))))
         .toSet();
+
+    executionDatetimeController = ValueNotifier(transaction.executionDatetime);
 
     setState(() {});
   }
@@ -118,28 +152,6 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
       );
     }
 
-    var pickDeposit = (FinanceDeposit oldValue) async {
-      var id = await Navigator.push<String>(
-          context,
-          MaterialPageRoute(
-              builder: (context) => FinanceDepositListPage(true)));
-
-      if (id == null) {
-        return oldValue;
-      }
-
-      return await depositRepository.findById(id);
-    };
-
-    var depositToString = (deposit) {
-      if (deposit == null) {
-        return null;
-      }
-
-      return '${deposit.name} '
-          '(${NumberFormat.currency(symbol: '€').format(deposit.balance)})';
-    };
-
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10),
       child: Form(
@@ -148,21 +160,18 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
           children: <Widget>[
             ObjectFormField<FinanceDeposit>(
               decoration: InputDecoration(labelText: 'Source deposit'),
-              objectToString: depositToString,
-              pickValue: pickDeposit,
-              initialValue: sourceDeposit,
+              objectToString: _depositToString,
+              pickValue: _pickDeposit,
+              initialValue: initialSourceDeposit,
               onSaved: (deposit) {
                 transaction.sourceDepositId = deposit?.id;
               },
             ),
             ObjectFormField<FinanceDeposit>(
               decoration: InputDecoration(labelText: 'Target deposit'),
-              objectToString: depositToString,
-              pickValue: pickDeposit,
-              initialValue: targetDeposit,
-              validator: (deposit) {
-                // todo: validation, one of the two must be set
-              },
+              objectToString: _depositToString,
+              pickValue: _pickDeposit,
+              initialValue: initialTargetDeposit,
               onSaved: (deposit) {
                 transaction.targetDepositId = deposit?.id;
               },
@@ -186,16 +195,63 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
                 transaction.value = double.parse(value);
               },
             ),
-//            TextFormField(
-//              decoration: InputDecoration(labelText: 'State'),
-//              autovalidate: true,
-//              validator: (val) => 'errorj',
-//            ),
+            ObjectFormField<FinanceTransactionState>(
+              initialValue: transaction.state,
+              showResetButton: false,
+              objectToString: (value) {
+                if (value == null) {
+                  return null;
+                }
+
+                switch (value) {
+                  case FinanceTransactionState.executed:
+                    return 'Executed';
+                  case FinanceTransactionState.blocked:
+                    return 'Blocked';
+                  case FinanceTransactionState.cancelled:
+                    return 'Cancelled';
+                  case FinanceTransactionState.planned:
+                    return 'Planned';
+                }
+              },
+              pickValue: (oldValue) async {
+                var state = await Navigator.push<FinanceTransactionState>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FinanceTransactionStateListPage(),
+                  ),
+                );
+
+                if (state == FinanceTransactionState.executed &&
+                    oldValue != FinanceTransactionState.executed) {
+                  executionDatetimeController.value = DateTime.now();
+                  FlushbarService().show(
+                      FlushType.SUCCESS, 'Execution date set to now.', context);
+                }
+
+                return state ?? oldValue;
+              },
+              validator: (val) {
+                if (val == null) {
+                  return 'State must be set.';
+                }
+              },
+              onSaved: (val) {
+                transaction.state = val;
+              },
+              decoration: InputDecoration(labelText: 'State'),
+            ),
             ObjectFormField<DateTime>(
-              initialValue: transaction.executionDatetime,
+              controller: executionDatetimeController,
+              showResetButton: false,
+              validator: (val) {
+                if(val == null) {
+                  return 'Execution date must be set.';
+                }
+              },
               decoration: InputDecoration(labelText: 'Execution date'),
               objectToString: (dateTime) => dateTime != null
-                  ? DateFormat('d.M.y HH:mm').format(dateTime)
+                  ? Config.dateTimeFormat.format(dateTime)
                   : null,
               pickValue: (currVal) async {
                 var date = await showDatePicker(
@@ -227,7 +283,7 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
               initialValue: transaction.name,
               decoration: InputDecoration(labelText: 'Name'),
               onSaved: (name) {
-                transaction.name = name;
+                transaction.name = name.isEmpty ? null : name;
               },
             ),
             TextFormField(
@@ -240,7 +296,7 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
               },
             ),
             ObjectFormField<Set<FinanceTransactionCategory>>(
-              initialValue: categories,
+              initialValue: initialCategories,
               showResetButton: false,
               onSaved: (categories) {
                 transaction.categoriesIds =
@@ -280,5 +336,25 @@ class _FinanceTransactionEditPageState extends State<FinanceTransactionEditPage>
         ),
       ),
     );
+  }
+
+  String _depositToString(deposit) {
+    if (deposit == null) {
+      return null;
+    }
+
+    return '${deposit.name} '
+        '(${Config.currencyDetailedFormat.format(deposit.balance)})';
+  }
+
+  Future<FinanceDeposit> _pickDeposit(FinanceDeposit oldValue) async {
+    var id = await Navigator.push<String>(context,
+        MaterialPageRoute(builder: (context) => FinanceDepositListPage(true)));
+
+    if (id == null) {
+      return oldValue;
+    }
+
+    return await depositRepository.findById(id);
   }
 }

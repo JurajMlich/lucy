@@ -40,8 +40,16 @@ abstract class Repository<T extends IdAware<ID>, ID> {
     );
   }
 
-  Future<List<T>> findAll() async {
-    final results = await _database.query(_tableName, columns: _columns);
+  Future<List<T>> findAll({
+    int limit,
+    int offset,
+  }) async {
+    final results = await _database.query(
+      _tableName,
+      columns: _columns,
+      limit: limit,
+      offset: offset,
+    );
 
     return (await Future.wait(results.map((result) => convertFromMap(result))))
         .toList();

@@ -1,8 +1,8 @@
+import 'package:android/config/config.dart';
 import 'package:android/lucy_container.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class FinanceDepositListPage extends StatefulWidget {
   final bool selectMode;
@@ -33,7 +33,8 @@ class _FinanceDepositListPageState extends State<FinanceDepositListPage> {
   void initState() {
     super.initState();
 
-    var depositRepository = LucyContainer().getRepository<FinanceDepositRepository>();
+    var depositRepository =
+        LucyContainer().getRepository<FinanceDepositRepository>();
     depositRepository.findAll().then((deposits) {
       setState(() {
         this.deposits = deposits;
@@ -57,9 +58,7 @@ class _FinanceDepositListPageState extends State<FinanceDepositListPage> {
           child: Container(
             decoration: BoxDecoration(
                 border: Border(
-                    bottom: BorderSide(color: Theme
-                        .of(context)
-                        .dividerColor))),
+                    bottom: BorderSide(color: Theme.of(context).dividerColor))),
             padding: EdgeInsets.symmetric(vertical: 15, horizontal: 10),
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 10),
@@ -70,8 +69,9 @@ class _FinanceDepositListPageState extends State<FinanceDepositListPage> {
                         ? Icons.account_balance_wallet
                         : Icons.account_balance,
                     size: 20,
-                    color: deposit.type == FinanceDepositType.cash ? Color.fromARGB
-                      (255, 222, 173, 1) : Colors.grey,
+                    color: deposit.type == FinanceDepositType.cash
+                        ? Color.fromARGB(255, 222, 173, 1)
+                        : Colors.grey,
                   ),
                   Expanded(
                     child: Padding(
@@ -83,12 +83,13 @@ class _FinanceDepositListPageState extends State<FinanceDepositListPage> {
                     ),
                   ),
                   Text(
-                    NumberFormat.currency(symbol: '€').format(deposit.balance),
+                    Config.currencyDetailedFormat.format(deposit.balance),
                     style: TextStyle(
-                        color: deposit.balance < 50 ? Color.fromRGBO(
-                            255, 77, 77,
-                            1) : (deposit.balance > 1000 ? Colors.lightGreen : null)
-                    ),
+                        color: deposit.balance < 50
+                            ? Color.fromRGBO(255, 77, 77, 1)
+                            : (deposit.balance > 1000
+                                ? Colors.lightGreen
+                                : null)),
                   ),
                 ],
               ),

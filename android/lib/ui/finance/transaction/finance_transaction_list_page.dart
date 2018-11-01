@@ -1,6 +1,7 @@
 import 'package:android/lucy_container.dart';
 import 'package:android/model/finance_transaction.dart';
 import 'package:android/repository/finance_transaction_repository.dart';
+import 'package:android/ui/finance/transaction/finance_transaction_card.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +12,8 @@ class FinanceTransactionListPage extends StatefulWidget {
   }
 }
 
-class _FinanceTransactionListPageState extends State<FinanceTransactionListPage> {
+class _FinanceTransactionListPageState
+    extends State<FinanceTransactionListPage> {
   List<FinanceTransaction> transactions;
 
   @override
@@ -22,19 +24,32 @@ class _FinanceTransactionListPageState extends State<FinanceTransactionListPage>
         actions: <Widget>[],
       ),
       body: _buildBody(context),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          await Navigator.push(context, MaterialPageRoute(
+            builder: (context) => FinanceTransactionEditPage()
+          ));
+
+          _load();
+        },
+      ),
     );
   }
 
   @override
   void initState() {
     super.initState();
+    _load();
+  }
 
+  Future<Null> _load() async {
+    this.transactions = null;
     var transactionRepository =
         LucyContainer().getRepository<FinanceTransactionRepository>();
-    transactionRepository.findAll().then((transaction) {
-      setState(() {
-        this.transactions = transaction;
-      });
+    var transactions = await transactionRepository.findBy();
+    setState(() {
+      this.transactions = transactions;
     });
   }
 
@@ -49,9 +64,18 @@ class _FinanceTransactionListPageState extends State<FinanceTransactionListPage>
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         return InkWell(
-            child: Text(transactions[index].name),
-            onTap: () {
-              Navigator.push(
+            child: Container(
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(color: Theme.of(context).dividerColor))),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical:
+                14),
+                child: FinanceTransactionCard(transactions[index]),
+              ),
+            ),
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => FinanceTransactionEditPage(
@@ -59,6 +83,8 @@ class _FinanceTransactionListPageState extends State<FinanceTransactionListPage>
                       ),
                 ),
               );
+
+              await _load();
             });
       },
     );

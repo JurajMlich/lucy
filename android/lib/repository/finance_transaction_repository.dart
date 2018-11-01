@@ -4,6 +4,15 @@ import 'package:android/utils/datetime_utils.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
+enum FinanceTransactionExecutionDateType {
+  onlyFuture,
+  maxCloseFuture,
+  onlyPast,
+  all,
+}
+
+enum FinanceTransactionSort { newestToOldest, oldestToNewest }
+
 class FinanceTransactionRepository
     extends Repository<FinanceTransaction, String> {
   static const String tableName = 'finance_transaction';
@@ -50,6 +59,57 @@ class FinanceTransactionRepository
     entity = await super.create(entity);
     await _updateReferences(entity);
     return entity;
+  }
+
+  Future<List<FinanceTransaction>> findBy(
+      {int limit,
+      int offset,
+      List<FinanceTransactionState> onlyState,
+      FinanceTransactionExecutionDateType futureType =
+          FinanceTransactionExecutionDateType.all,
+      FinanceTransactionSort sort =
+          FinanceTransactionSort.newestToOldest}) async {
+    var where = '';
+    var whereArgs = <String>[];
+
+    if (onlyState != null) {
+      where +=
+          ' AND $columnState IN (${List.filled(onlyState.length, '?').join(", ")})';
+      onlyState.forEach((state) => whereArgs.add(enumToString(state)));
+    }
+
+    if (futureType != FinanceTransactionExecutionDateType.all) {
+      if (futureType == FinanceTransactionExecutionDateType.onlyFuture) {
+        where += ' AND $columnExecutionDatetime > ?';
+        whereArgs.add(dateTimeToInt(DateTime.now()).toString());
+      } else if (futureType == FinanceTransactionExecutionDateType.onlyPast) {
+        where += ' AND $columnExecutionDatetime < ?';
+        whereArgs.add(dateTimeToInt(DateTime.now()).toString());
+      } else if (futureType ==
+          FinanceTransactionExecutionDateType.maxCloseFuture) {
+        where += ' AND $columnExecutionDatetime < ?';
+        whereArgs.add(
+            dateTimeToInt(DateTime.now().add(Duration(days: 14))).toString());
+      }
+    }
+
+    where = where.isEmpty ? null : where.substring(' AND'.length);
+
+    var orderBy = '$columnExecutionDatetime '
+        '${sort == FinanceTransactionSort.newestToOldest ? 'DESC' : 'ASC'}';
+
+    final results = await _database.query(
+      tableName,
+      columns: allColumns,
+      limit: limit,
+      offset: offset,
+      orderBy: orderBy,
+      where: where,
+      whereArgs: whereArgs,
+    );
+
+    return (await Future.wait(results.map((result) => convertFromMap(result))))
+        .toList();
   }
 
   @override

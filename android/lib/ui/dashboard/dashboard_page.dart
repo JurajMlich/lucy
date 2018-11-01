@@ -1,5 +1,7 @@
 import 'package:android/lucy_container.dart';
 import 'package:android/routes.dart';
+import 'package:android/ui/finance/finance_overview_page.dart';
+import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -114,7 +116,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 InkWell(
                   child: _buildGridItem(routes[1], Colors.black),
-                  onTap: () => null,
+                  onTap: () async {},
                 )
               ],
             ),
@@ -228,7 +230,20 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                     ),
-                    onTap: () => null,
+                    onTap: () async {
+                      var result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  FinanceTransactionEditPage()));
+
+                      if (result != null) {
+                        await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => FinanceOverviewPage()));
+                      }
+                    },
                   )
                 ],
               ),
