@@ -5,6 +5,7 @@ import 'package:android/model/finance_transaction.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/repository/finance_transaction_repository.dart';
 import 'package:android/ui/finance/category/finance_transaction_category_list_page.dart';
+import 'package:android/ui/finance/finance_deposit_view.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_card.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_list_page.dart';
@@ -377,7 +378,13 @@ class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
                   ),
                 ),
                 child: Center(
-                    child: Text(Config.currencyFormat.format(deposit.balance))),
+                  child: Text(
+                    Config.currencyFormat.format(deposit.balance),
+                    style: TextStyle(
+                      color: getColorForDeposit(deposit),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
