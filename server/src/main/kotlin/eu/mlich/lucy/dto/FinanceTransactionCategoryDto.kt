@@ -5,7 +5,7 @@ import java.util.*
 /**
  * @author Juraj Mlich <jurajmlich@gmail.com>
  */
-data class TransactionCategoryDto(
+data class FinanceTransactionCategoryDto(
         var id: UUID? = null,
         var name: String,
         var color: String? = null,

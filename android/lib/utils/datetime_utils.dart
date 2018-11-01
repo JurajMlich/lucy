@@ -7,7 +7,7 @@ int dateTimeToInt(DateTime value) {
 }
 
 DateTime intToDateTime(int value) {
-  if(value == null) {
+  if (value == null) {
     return null;
   }
 

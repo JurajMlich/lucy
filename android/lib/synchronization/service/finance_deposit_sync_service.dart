@@ -4,7 +4,7 @@ import 'package:android/exception/forbidden_exception.dart';
 import 'package:android/exception/not_found_exception.dart';
 import 'package:android/model/deposit.dart';
 import 'package:android/model/server_instruction.dart';
-import 'package:android/repository/deposit_repository.dart';
+import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/repository/user_repository.dart';
 import 'package:android/synchronization/page_downloader.dart';
 import 'package:android/synchronization/server_driver.dart';
@@ -13,14 +13,14 @@ import 'package:android/synchronization/sync_item.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:android/utils/string_utils.dart';
 
-class DepositSyncService extends SyncService<String> {
-  DepositRepository _depositRepository;
+class FinanceDepositSyncService extends SyncService<String> {
+  FinanceDepositRepository _depositRepository;
   UserRepository _userRepository;
 
   @override
-  SyncItemType get forType => SyncItemType.deposit;
+  SyncItemType get forType => SyncItemType.financeDeposit;
 
-  DepositSyncService(this._depositRepository, this._userRepository);
+  FinanceDepositSyncService(this._depositRepository, this._userRepository);
 
   @override
   Future<Null> sendInstruction(
@@ -33,7 +33,7 @@ class DepositSyncService extends SyncService<String> {
     var creating = false;
 
     if (deposit == null) {
-      deposit = Deposit(rawDeposit['id']);
+      deposit = FinanceDeposit(rawDeposit['id']);
       creating = true;
     }
 
@@ -44,7 +44,7 @@ class DepositSyncService extends SyncService<String> {
       ..balance = rawDeposit['balance']
       ..disabled = rawDeposit['disabled']
       ..type = stringToEnum(
-        DepositType.values,
+        FinanceDepositType.values,
         underscoreToCamelCase(rawDeposit['type']),
       );
 
@@ -67,7 +67,7 @@ class DepositSyncService extends SyncService<String> {
     }
 
     if (missingSyncItems.length > 0) {
-      return SyncItemRefreshResult(SyncItem(SyncItemType.deposit, deposit.id),
+      return SyncItemRefreshResult(SyncItem(SyncItemType.financeDeposit, deposit.id),
           SyncItemRefreshResultState.referenceMissing, missingSyncItems);
     }
 
@@ -79,7 +79,7 @@ class DepositSyncService extends SyncService<String> {
 
     return SyncItemRefreshResult(
       SyncItem(
-        SyncItemType.deposit,
+        SyncItemType.financeDeposit,
         deposit.id,
       ),
       SyncItemRefreshResultState.refreshed,
@@ -95,7 +95,7 @@ class DepositSyncService extends SyncService<String> {
     }
 
     return SyncItemRefreshResult(
-      SyncItem(SyncItemType.deposit, identifier),
+      SyncItem(SyncItemType.financeDeposit, identifier),
       SyncItemRefreshResultState.refreshed,
       Set(),
     );
@@ -105,7 +105,7 @@ class DepositSyncService extends SyncService<String> {
   Future<SyncItemRefreshResult> refreshOne(
       ServerClient client, String identifier) async {
     try {
-      var response = await client.get('deposits/$identifier');
+      var response = await client.get('financeDeposits/$identifier');
       return await _processOne(jsonDecode(response.body));
     } on ForbiddenException {
       // if lost rights to see the item, delete it
@@ -119,7 +119,7 @@ class DepositSyncService extends SyncService<String> {
   @override
   Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
     final result = List<SyncItemRefreshResult>();
-    final pager = PageDownloader(client, 'deposits', 50);
+    final pager = PageDownloader(client, 'financeDeposits', 50);
 
     while (pager.hasNextPage()) {
       for (dynamic item in await pager.nextPage()) {

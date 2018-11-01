@@ -1,9 +1,9 @@
 package eu.mlich.lucy.service
 
-import eu.mlich.lucy.dto.DepositDto
-import eu.mlich.lucy.model.money.Deposit
+import eu.mlich.lucy.dto.FinanceDepositDto
+import eu.mlich.lucy.model.finance.FinanceDeposit
 import eu.mlich.lucy.repository.UserRepository
-import eu.mlich.lucy.repository.money.DepositRepository
+import eu.mlich.lucy.repository.finance.FinanceDepositRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -11,7 +11,7 @@ import java.util.*
 
 @Service
 class DepositService @Autowired constructor(
-        private var repository: DepositRepository,
+        private var repository: FinanceDepositRepository,
         private var instanceInstructionService: InstanceInstructionService,
         private var userRepository: UserRepository
 ) {
@@ -23,26 +23,26 @@ class DepositService @Autowired constructor(
 
     fun search(pageRequest: Pageable) = repository.findAll(pageRequest).map { convertToDto(it) }
 
-    fun findOneById(id: Int): DepositDto? {
+    fun findOneById(id: Int): FinanceDepositDto? {
         return repository.findById(id)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
-    fun findOneByPublicKey(publicKey: UUID): DepositDto? {
+    fun findOneByPublicKey(publicKey: UUID): FinanceDepositDto? {
         return repository.findOneByPublicKey(publicKey)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
-    fun save(dto: DepositDto): DepositDto {
+    fun save(dto: FinanceDepositDto): FinanceDepositDto {
         val entity = repository.save(convertToEntity(dto))
         dto.id = entity.publicKey
         instanceInstructionService.refreshData(RESOURCE_NAME, entity.publicKey.toString())
         return dto
     }
 
-    fun convertToEntity(dto: DepositDto): Deposit { // todo throws
+    fun convertToEntity(dto: FinanceDepositDto): FinanceDeposit { // todo throws
         val owners = dto.ownersIds.map {
             userRepository.findOneByPublicKey(it).orElseThrow { IllegalArgumentException() }
         }.toHashSet()
@@ -65,10 +65,10 @@ class DepositService @Autowired constructor(
             }
         }
 
-        return Deposit(null, dto.name, dto.balance, dto.disabled, dto.type, owners, accessibleBy, id ?: UUID.randomUUID())
+        return FinanceDeposit(null, dto.name, dto.balance, dto.disabled, dto.type, owners, accessibleBy, id ?: UUID.randomUUID())
     }
 
-    fun convertToDto(entity: Deposit): DepositDto {
-        return DepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.type, entity.owners.map { it.publicKey }.toSet(), entity.accessibleBy.map { it.publicKey }.toSet())
+    fun convertToDto(entity: FinanceDeposit): FinanceDepositDto {
+        return FinanceDepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.type, entity.owners.map { it.publicKey }.toSet(), entity.accessibleBy.map { it.publicKey }.toSet())
     }
 }

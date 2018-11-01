@@ -1,7 +1,6 @@
-package eu.mlich.lucy.model.money
+package eu.mlich.lucy.model.finance
 
 import eu.mlich.lucy.model.User
-import org.hibernate.annotations.Type
 import java.util.*
 import javax.persistence.*
 
@@ -11,8 +10,8 @@ import javax.persistence.*
  * @author Juraj Mlich <jurajmlich@gmail.com>
  */
 @Entity
-@Table(name = "deposit")
-data class Deposit(
+@Table(name = "finance_deposit")
+data class FinanceDeposit(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "id")
@@ -29,11 +28,11 @@ data class Deposit(
 
         @Column(name = "type")
         @Enumerated(EnumType.STRING)
-        var type: DepositType,
+        var type: FinanceDepositType,
 
         @ManyToMany(cascade = [CascadeType.ALL])
         @JoinTable(
-                name = "deposit_owner",
+                name = "finance_deposit_owner",
                 joinColumns = [JoinColumn(name = "deposit_id")],
                 inverseJoinColumns = [(JoinColumn(name = "user_id"))]
         )
@@ -41,7 +40,7 @@ data class Deposit(
 
         @ManyToMany(cascade = [CascadeType.ALL])
         @JoinTable(
-                name = "deposit_user",
+                name = "finance_deposit_accessible_by",
                 joinColumns = [JoinColumn(name = "deposit_id")],
                 inverseJoinColumns = [(JoinColumn(name = "user_id"))]
         )
@@ -51,7 +50,7 @@ data class Deposit(
         var publicKey: UUID = UUID.randomUUID()
 
 ) {
-    override fun equals(other: Any?) = other is Deposit && other.publicKey === publicKey
+    override fun equals(other: Any?) = other is FinanceDeposit && other.publicKey === publicKey
 
     override fun hashCode(): Int = publicKey.hashCode()
 }

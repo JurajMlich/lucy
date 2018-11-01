@@ -1,10 +1,8 @@
 package eu.mlich.lucy.service
 
-import eu.mlich.lucy.dto.TransactionCategoryDto
-import eu.mlich.lucy.dto.TransactionDto
-import eu.mlich.lucy.model.money.Transaction
-import eu.mlich.lucy.model.money.TransactionCategory
-import eu.mlich.lucy.repository.money.TransactionCategoryRepository
+import eu.mlich.lucy.dto.FinanceTransactionCategoryDto
+import eu.mlich.lucy.model.finance.FinanceTransactionCategory
+import eu.mlich.lucy.repository.finance.FinanceTransactionCategoryRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -13,7 +11,7 @@ import javax.transaction.Transactional
 
 @Service
 class TransactionCategoryService @Autowired constructor(
-        private var repository: TransactionCategoryRepository,
+        private var repository: FinanceTransactionCategoryRepository,
         private var instanceInstructionService: InstanceInstructionService
 ) {
     companion object {
@@ -24,30 +22,30 @@ class TransactionCategoryService @Autowired constructor(
 
     fun findAll(pageRequest: Pageable) = repository.findAll(pageRequest).map { convertToDto(it) }
 
-    fun findOneById(id: Int): TransactionCategoryDto? {
+    fun findOneById(id: Int): FinanceTransactionCategoryDto? {
         return repository.findById(id)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
-    fun findOneByPublicKey(publicKey: UUID): TransactionCategoryDto? {
+    fun findOneByPublicKey(publicKey: UUID): FinanceTransactionCategoryDto? {
         return repository.findOneByPublicKey(publicKey)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
     @Transactional
-    fun save(dto: TransactionCategoryDto): TransactionCategoryDto {
+    fun save(dto: FinanceTransactionCategoryDto): FinanceTransactionCategoryDto {
         val entity = repository.save(convertToEntity(dto))
         dto.id = entity.publicKey
         instanceInstructionService.refreshData(RESOURCE_NAME, entity.publicKey.toString())
         return dto
     }
 
-    fun convertToEntity(dto: TransactionCategoryDto): TransactionCategory { // todo throws
+    fun convertToEntity(dto: FinanceTransactionCategoryDto): FinanceTransactionCategory { // todo throws
         val id = dto.id
         return if (id == null) {
-            TransactionCategory(null, dto.name, dto.color, dto.negative, dto.disabled)
+            FinanceTransactionCategory(null, dto.name, dto.color, dto.negative, dto.disabled)
         } else {
             val original = repository.findOneByPublicKey(id).orElseThrow { IllegalStateException() }
             original.color = dto.color
@@ -58,8 +56,8 @@ class TransactionCategoryService @Autowired constructor(
         }
     }
 
-    fun convertToDto(entity: TransactionCategory): TransactionCategoryDto {
-        return TransactionCategoryDto(
+    fun convertToDto(entity: FinanceTransactionCategory): FinanceTransactionCategoryDto {
+        return FinanceTransactionCategoryDto(
                 entity.publicKey,
                 entity.name,
                 entity.color,

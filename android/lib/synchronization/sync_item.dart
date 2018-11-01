@@ -1,9 +1,9 @@
 /// Type of item that is being synchronized with server.
 enum SyncItemType {
   user,
-  deposit,
-  transaction,
-  transactionCategory,
+  financeDeposit,
+  financeTransaction,
+  financeTransactionCategory,
 }
 
 /// State of refresh.

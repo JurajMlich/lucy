@@ -283,7 +283,7 @@ class Synchronization {
     // server tells us what resources have changed, but we have SyncItemTypes
     var resourceToSyncItemType = {
       'user': SyncItemType.user,
-      'deposit': SyncItemType.deposit
+      'deposit': SyncItemType.financeDeposit
     };
 
     for (var instruction in instructions) {

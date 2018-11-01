@@ -1,4 +1,4 @@
-import 'package:android/ui/finance/finances_page.dart';
+import 'package:android/ui/finance/finance_overview_page.dart';
 import 'package:android/ui/preferences/preferences_page.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +21,7 @@ var routes = [
     name: 'Finance',
     icon: Icons.euro_symbol,
     path: '/finance',
-    target: FinancePage(),
+    target: FinanceOverviewPage(),
   ),
   LucyRoute(
     name: 'Preferences',

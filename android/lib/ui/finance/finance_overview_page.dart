@@ -1,18 +1,19 @@
 import 'package:android/lucy_container.dart';
 import 'package:android/model/deposit.dart';
-import 'package:android/repository/deposit_repository.dart';
-import 'package:android/ui/finance/transaction/transaction_edit_page.dart';
+import 'package:android/repository/finance_deposit_repository.dart';
+import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
+import 'package:android/ui/finance/transaction/finance_transaction_list_page.dart';
 import 'package:flutter/material.dart';
 
-class FinancePage extends StatefulWidget {
+class FinanceOverviewPage extends StatefulWidget {
   @override
-  _FinancePageState createState() {
-    return _FinancePageState();
+  _FinanceOverviewPageState createState() {
+    return _FinanceOverviewPageState();
   }
 }
 
-class _FinancePageState extends State<FinancePage> {
-  List<Deposit> _deposits;
+class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
+  List<FinanceDeposit> _deposits;
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +22,22 @@ class _FinancePageState extends State<FinancePage> {
         title: Text('Finance overview'),
         actions: <Widget>[
           IconButton(
+            icon: Icon(Icons.list),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>
+                    FinanceTransactionListPage ()),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.add),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TransactionEditPage()),
+                MaterialPageRoute(builder: (context) =>
+                    FinanceTransactionEditPage()),
               );
             },
           )
@@ -39,7 +51,7 @@ class _FinancePageState extends State<FinancePage> {
   void initState() {
     super.initState();
 
-    var depositRepository = LucyContainer().getRepository<DepositRepository>();
+    var depositRepository = LucyContainer().getRepository<FinanceDepositRepository>();
 //    var transactionCategoryRepository = LucyContainer()
 //        .getRepository<TransactionCategoryRepository>();
 //    var moneyTransactionRepository = LucyContainer()

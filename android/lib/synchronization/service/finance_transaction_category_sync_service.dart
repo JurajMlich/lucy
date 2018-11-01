@@ -2,21 +2,21 @@ import 'dart:convert';
 
 import 'package:android/exception/forbidden_exception.dart';
 import 'package:android/exception/not_found_exception.dart';
+import 'package:android/model/finance_transaction_category.dart';
 import 'package:android/model/server_instruction.dart';
-import 'package:android/model/transaction_category.dart';
-import 'package:android/repository/transaction_category_repository.dart';
+import 'package:android/repository/finance_transaction_category_repository.dart';
 import 'package:android/synchronization/page_downloader.dart';
 import 'package:android/synchronization/server_driver.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/sync_item.dart';
 
-class TransactionCategorySyncService extends SyncService<String> {
-  TransactionCategoryRepository _transactionCategoryRepository;
+class FinanceTransactionCategorySyncService extends SyncService<String> {
+  FinanceTransactionCategoryRepository _transactionCategoryRepository;
 
   @override
-  SyncItemType get forType => SyncItemType.transactionCategory;
+  SyncItemType get forType => SyncItemType.financeTransactionCategory;
 
-  TransactionCategorySyncService(this._transactionCategoryRepository);
+  FinanceTransactionCategorySyncService(this._transactionCategoryRepository);
 
   @override
   Future<Null> sendInstruction(
@@ -30,7 +30,7 @@ class TransactionCategorySyncService extends SyncService<String> {
     var creating = false;
 
     if (transactionCategory == null) {
-      transactionCategory = TransactionCategory(rawData['id']);
+      transactionCategory = FinanceTransactionCategory(rawData['id']);
       creating = true;
     }
 
@@ -48,7 +48,7 @@ class TransactionCategorySyncService extends SyncService<String> {
 
     return SyncItemRefreshResult(
       SyncItem(
-        SyncItemType.transactionCategory,
+        SyncItemType.financeTransactionCategory,
         transactionCategory.id,
       ),
       SyncItemRefreshResultState.refreshed,
@@ -65,7 +65,7 @@ class TransactionCategorySyncService extends SyncService<String> {
     }
 
     return SyncItemRefreshResult(
-      SyncItem(SyncItemType.transactionCategory, identifier),
+      SyncItem(SyncItemType.financeTransactionCategory, identifier),
       SyncItemRefreshResultState.refreshed,
       Set(),
     );
@@ -77,7 +77,8 @@ class TransactionCategorySyncService extends SyncService<String> {
     String identifier,
   ) async {
     try {
-      var response = await client.get('transactionCategories/$identifier');
+      var response =
+          await client.get('financeTransactionCategories/$identifier');
       return await _processOne(jsonDecode(response.body));
     } on ForbiddenException {
       // if lost rights to see the item, delete it
@@ -91,7 +92,7 @@ class TransactionCategorySyncService extends SyncService<String> {
   @override
   Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
     final result = List<SyncItemRefreshResult>();
-    final pager = PageDownloader(client, 'transactionCategories', 50);
+    final pager = PageDownloader(client, 'financeTransactionCategories', 50);
 
     while (pager.hasNextPage()) {
       for (dynamic item in await pager.nextPage()) {

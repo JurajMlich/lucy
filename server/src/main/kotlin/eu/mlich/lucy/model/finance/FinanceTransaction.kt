@@ -1,19 +1,18 @@
-package eu.mlich.lucy.model.money
+package eu.mlich.lucy.model.finance
 
 import eu.mlich.lucy.model.User
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.util.*
 import javax.persistence.*
 
 /**
- * Represent a transaction between a [Deposit] or anything external.
+ * Represent a transaction between a [FinanceDeposit] or anything external.
  *
  * @author Juraj Mlich <jurajmlich@gmail.com>
  */
 @Entity
-@Table(name = "transaction")
-data class Transaction(
+@Table(name = "finance_transaction")
+data class FinanceTransaction(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "id")
@@ -24,15 +23,15 @@ data class Transaction(
          */
         @ManyToOne
         @JoinColumn(name = "source_deposit_id")
-        var sourceDeposit: Deposit?,
+        var sourceDeposit: FinanceDeposit?,
 
         @ManyToOne
         @JoinColumn(name = "target_deposit_id")
-        var targetDeposit: Deposit,
+        var targetDeposit: FinanceDeposit?,
 
         @Column(name = "state")
         @Enumerated(EnumType.STRING)
-        var state: TransactionState,
+        var state: FinanceTransactionState,
 
         @Column(name = "value")
         var value: Double,
@@ -52,17 +51,17 @@ data class Transaction(
 
         @ManyToMany
         @JoinTable(
-                name = "transaction_transaction_category",
+                name = "finance_transaction_transaction_category",
                 joinColumns = [JoinColumn(name = "transaction_id")],
                 inverseJoinColumns = [(JoinColumn(name = "transaction_category_id"))]
         )
-        var categories: Set<TransactionCategory> = HashSet(),
+        var categories: Set<FinanceTransactionCategory> = HashSet(),
 
         @Column(name = "public_key")
         var publicKey: UUID = UUID.randomUUID()
 
 ) {
-        override fun equals(other: Any?) = other is Transaction && other.publicKey === publicKey
+        override fun equals(other: Any?) = other is FinanceTransaction && other.publicKey === publicKey
 
         override fun hashCode(): Int = publicKey.hashCode()
 }

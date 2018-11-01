@@ -1,4 +1,4 @@
-package eu.mlich.lucy.model.money
+package eu.mlich.lucy.model.finance
 
 import java.util.*
 import javax.persistence.*
@@ -9,8 +9,8 @@ import javax.persistence.*
  * @author Juraj Mlich <jurajmlich@gmail.com>
  */
 @Entity
-@Table(name = "transaction_category")
-data class TransactionCategory(
+@Table(name = "finance_transaction_category")
+data class FinanceTransactionCategory(
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "id")
@@ -35,7 +35,7 @@ data class TransactionCategory(
         var publicKey: UUID = UUID.randomUUID()
 
 ) {
-    override fun equals(other: Any?) = other is Deposit && other.publicKey === publicKey
+    override fun equals(other: Any?) = other is FinanceDeposit && other.publicKey === publicKey
 
     override fun hashCode(): Int = publicKey.hashCode()
 }

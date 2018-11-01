@@ -7,7 +7,7 @@ part 'deposit_operations.g.dart';
 class DepositCreateOperation {
   static const String identifier = 'DEPOSIT_CREATE_OPERATION';
 
-  Deposit deposit;
+  FinanceDeposit deposit;
 
   DepositCreateOperation(this.deposit);
 
@@ -21,7 +21,7 @@ class DepositCreateOperation {
 class DepositUpdateOperation {
   static const String identifier = 'DEPOSIT_UPDATE_OPERATION';
 
-  Deposit deposit;
+  FinanceDeposit deposit;
 
   DepositUpdateOperation(this.deposit);
 

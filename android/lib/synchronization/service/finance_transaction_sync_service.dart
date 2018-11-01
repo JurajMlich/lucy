@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:android/exception/forbidden_exception.dart';
 import 'package:android/exception/not_found_exception.dart';
-import 'package:android/model/money_transaction.dart';
+import 'package:android/model/finance_transaction.dart';
 import 'package:android/model/server_instruction.dart';
-import 'package:android/repository/deposit_repository.dart';
-import 'package:android/repository/money_transaction_repository.dart';
-import 'package:android/repository/transaction_category_repository.dart';
+import 'package:android/repository/finance_deposit_repository.dart';
+import 'package:android/repository/finance_transaction_repository.dart';
+import 'package:android/repository/finance_transaction_category_repository.dart';
 import 'package:android/repository/user_repository.dart';
 import 'package:android/synchronization/page_downloader.dart';
 import 'package:android/synchronization/server_driver.dart';
@@ -15,16 +15,16 @@ import 'package:android/synchronization/sync_item.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:android/utils/string_utils.dart';
 
-class TransactionSyncService extends SyncService<String> {
-  DepositRepository _depositRepository;
-  MoneyTransactionRepository _moneyTransactionRepository;
+class FinanceTransactionSyncService extends SyncService<String> {
+  FinanceDepositRepository _depositRepository;
+  FinanceTransactionRepository _moneyTransactionRepository;
   UserRepository _userRepository;
-  TransactionCategoryRepository _transactionCategoryRepository;
+  FinanceTransactionCategoryRepository _transactionCategoryRepository;
 
   @override
-  SyncItemType get forType => SyncItemType.transaction;
+  SyncItemType get forType => SyncItemType.financeTransaction;
 
-  TransactionSyncService(
+  FinanceTransactionSyncService(
     this._depositRepository,
     this._userRepository,
     this._moneyTransactionRepository,
@@ -42,16 +42,16 @@ class TransactionSyncService extends SyncService<String> {
     var creating = false;
 
     if (entity == null) {
-      entity = MoneyTransaction(rawData['id']);
+      entity = FinanceTransaction(rawData['id']);
       creating = true;
     }
 
     entity
-    ..executionDatetime = parseServerDateTime(rawData['executionDatetime'])
+      ..executionDatetime = parseServerDateTime(rawData['executionDatetime'])
       ..sourceDepositId = rawData['sourceDepositId']
       ..targetDepositId = rawData['targetDepositId']
-      ..state = stringToEnum<TransactionState>(
-        TransactionState.values,
+      ..state = stringToEnum<FinanceTransactionState>(
+        FinanceTransactionState.values,
         underscoreToCamelCase(rawData['state']),
       )
       ..value = rawData['value']
@@ -65,7 +65,7 @@ class TransactionSyncService extends SyncService<String> {
     for (var categoryId in rawData['categoriesIds']) {
       if ((await _transactionCategoryRepository.findById(categoryId)) == null) {
         missingSyncItems
-            .add(SyncItem(SyncItemType.transactionCategory, categoryId));
+            .add(SyncItem(SyncItemType.financeTransactionCategory, categoryId));
       } else {
         entity.categoriesIds.add(categoryId);
       }
@@ -77,16 +77,19 @@ class TransactionSyncService extends SyncService<String> {
     if (entity.sourceDepositId != null &&
         (await _depositRepository.findById(entity.sourceDepositId)) == null) {
       missingSyncItems
-          .add(SyncItem(SyncItemType.deposit, entity.sourceDepositId));
+          .add(SyncItem(SyncItemType.financeDeposit, entity.sourceDepositId));
     }
-    if ((await _depositRepository.findById(entity.targetDepositId)) == null) {
+    if (entity.targetDepositId != null &&
+        (await _depositRepository.findById(entity.targetDepositId)) == null) {
       missingSyncItems
-          .add(SyncItem(SyncItemType.deposit, entity.targetDepositId));
+          .add(SyncItem(SyncItemType.financeDeposit, entity.targetDepositId));
     }
 
     if (missingSyncItems.length > 0) {
-      return SyncItemRefreshResult(SyncItem(SyncItemType.transaction, entity.id),
-          SyncItemRefreshResultState.referenceMissing, missingSyncItems);
+      return SyncItemRefreshResult(
+          SyncItem(SyncItemType.financeTransaction, entity.id),
+          SyncItemRefreshResultState.referenceMissing,
+          missingSyncItems);
     }
 
     if (creating) {
@@ -97,7 +100,7 @@ class TransactionSyncService extends SyncService<String> {
 
     return SyncItemRefreshResult(
       SyncItem(
-        SyncItemType.transaction,
+        SyncItemType.financeTransaction,
         entity.id,
       ),
       SyncItemRefreshResultState.refreshed,
@@ -113,7 +116,7 @@ class TransactionSyncService extends SyncService<String> {
     }
 
     return SyncItemRefreshResult(
-      SyncItem(SyncItemType.transaction, identifier),
+      SyncItem(SyncItemType.financeTransaction, identifier),
       SyncItemRefreshResultState.refreshed,
       Set(),
     );
@@ -123,7 +126,7 @@ class TransactionSyncService extends SyncService<String> {
   Future<SyncItemRefreshResult> refreshOne(
       ServerClient client, String identifier) async {
     try {
-      var response = await client.get('transactions/$identifier');
+      var response = await client.get('financeTransactions/$identifier');
       return await _processOne(jsonDecode(response.body));
     } on ForbiddenException {
       // if lost rights to see the item, delete it
@@ -137,7 +140,7 @@ class TransactionSyncService extends SyncService<String> {
   @override
   Future<List<SyncItemRefreshResult>> refreshAll(ServerClient client) async {
     final result = List<SyncItemRefreshResult>();
-    final pager = PageDownloader(client, 'transactions', 50);
+    final pager = PageDownloader(client, 'financeTransactions', 50);
 
     while (pager.hasNextPage()) {
       for (dynamic item in await pager.nextPage()) {

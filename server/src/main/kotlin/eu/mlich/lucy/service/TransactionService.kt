@@ -1,11 +1,11 @@
 package eu.mlich.lucy.service
 
-import eu.mlich.lucy.dto.TransactionDto
-import eu.mlich.lucy.model.money.Transaction
+import eu.mlich.lucy.dto.FinanceTransactionDto
+import eu.mlich.lucy.model.finance.FinanceTransaction
 import eu.mlich.lucy.repository.UserRepository
-import eu.mlich.lucy.repository.money.DepositRepository
-import eu.mlich.lucy.repository.money.TransactionCategoryRepository
-import eu.mlich.lucy.repository.money.TransactionRepository
+import eu.mlich.lucy.repository.finance.FinanceDepositRepository
+import eu.mlich.lucy.repository.finance.FinanceTransactionCategoryRepository
+import eu.mlich.lucy.repository.finance.FinanceTransactionRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -14,11 +14,11 @@ import javax.transaction.Transactional
 
 @Service
 class TransactionService @Autowired constructor(
-        private var repository: TransactionRepository,
+        private var repository: FinanceTransactionRepository,
         private var instanceInstructionService: InstanceInstructionService,
         private var userRepository: UserRepository,
-        private var depositRepository: DepositRepository,
-        private var transactionCategoryRepository: TransactionCategoryRepository
+        private var financeDepositRepository: FinanceDepositRepository,
+        private var financeTransactionCategoryRepository: FinanceTransactionCategoryRepository
 ) {
     companion object {
         const val RESOURCE_NAME = "transactions"
@@ -28,41 +28,43 @@ class TransactionService @Autowired constructor(
 
     fun findAll(pageRequest: Pageable) = repository.findAll(pageRequest).map { convertToDto(it) }
 
-    fun findOneById(id: Int): TransactionDto? {
+    fun findOneById(id: Int): FinanceTransactionDto? {
         return repository.findById(id)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
-    fun findOneByPublicKey(publicKey: UUID): TransactionDto? {
+    fun findOneByPublicKey(publicKey: UUID): FinanceTransactionDto? {
         return repository.findOneByPublicKey(publicKey)
                 .map { convertToDto(it) }
                 .orElse(null)
     }
 
     @Transactional
-    fun save(dto: TransactionDto): TransactionDto {
+    fun save(dto: FinanceTransactionDto): FinanceTransactionDto {
         val entity = repository.save(convertToEntity(dto))
         dto.id = entity.publicKey
         instanceInstructionService.refreshData(RESOURCE_NAME, entity.publicKey.toString())
         return dto
     }
 
-    fun convertToEntity(dto: TransactionDto): Transaction { // todo throws
+    fun convertToEntity(dto: FinanceTransactionDto): FinanceTransaction { // todo throws
         val creator = userRepository.findOneByPublicKey(dto.creatorId).orElseThrow { IllegalArgumentException() }
 
         val sourceDepositId = dto.sourceDepositId
         val sourceDeposit = if (sourceDepositId == null) null
-        else depositRepository.findOneByPublicKey(sourceDepositId).orElseThrow { IllegalArgumentException() }
+        else financeDepositRepository.findOneByPublicKey(sourceDepositId).orElseThrow { IllegalArgumentException() }
 
-        val targetDeposit = depositRepository.findOneByPublicKey(dto.targetDepositId).orElseThrow { IllegalArgumentException() }
+        val targetDepositId = dto.targetDepositId
+        val targetDeposit = if (targetDepositId == null) null
+        else financeDepositRepository.findOneByPublicKey(targetDepositId).orElseThrow { IllegalArgumentException() }
         val categories = dto.categoriesIds.map {
-            transactionCategoryRepository.findOneByPublicKey(it).orElseThrow { IllegalArgumentException() }
+            financeTransactionCategoryRepository.findOneByPublicKey(it).orElseThrow { IllegalArgumentException() }
         }.toHashSet()
 
         val id = dto.id
         return if (id == null) {
-            Transaction(null, sourceDeposit, targetDeposit, dto.state, dto.value, dto.executionDatetime, creator, dto.name, dto.note, categories)
+            FinanceTransaction(null, sourceDeposit, targetDeposit, dto.state, dto.value, dto.executionDatetime, creator, dto.name, dto.note, categories)
         } else {
             val original = repository.findOneByPublicKey(id).orElseThrow { IllegalStateException() }
             original.categories = categories
@@ -77,11 +79,11 @@ class TransactionService @Autowired constructor(
         }
     }
 
-    fun convertToDto(entity: Transaction): TransactionDto {
-        return TransactionDto(
+    fun convertToDto(entity: FinanceTransaction): FinanceTransactionDto {
+        return FinanceTransactionDto(
                 entity.publicKey,
                 entity.sourceDeposit?.publicKey,
-                entity.targetDeposit.publicKey,
+                entity.targetDeposit?.publicKey,
                 entity.state,
                 entity.value,
                 entity.executionDatetime,

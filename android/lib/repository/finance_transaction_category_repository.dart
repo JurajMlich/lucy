@@ -1,10 +1,10 @@
-import 'package:android/model/transaction_category.dart';
+import 'package:android/model/finance_transaction_category.dart';
 import 'package:android/repository/repository.dart';
 import 'package:sqflite/sqflite.dart';
 
-class TransactionCategoryRepository
-    extends Repository<TransactionCategory, String> {
-  static const String tableName = 'transaction_category';
+class FinanceTransactionCategoryRepository
+    extends Repository<FinanceTransactionCategory, String> {
+  static const String tableName = 'finance_transaction_category';
 
   static const String columnId = 'id';
   static const String columnName = 'name';
@@ -20,7 +20,7 @@ class TransactionCategoryRepository
     columnDisabled
   ];
 
-  TransactionCategoryRepository(Database database)
+  FinanceTransactionCategoryRepository(Database database)
       : super(
           database,
           tableName,
@@ -29,8 +29,9 @@ class TransactionCategoryRepository
         );
 
   @override
-  Future<TransactionCategory> convertFromMap(Map<String, Object> data) async {
-    return TransactionCategory(data[columnId])
+  Future<FinanceTransactionCategory> convertFromMap(
+      Map<String, Object> data) async {
+    return FinanceTransactionCategory(data[columnId])
       ..name = data[columnName]
       ..color = data[columnColor]
       ..disabled = data[columnDisabled] == 1
@@ -38,7 +39,8 @@ class TransactionCategoryRepository
   }
 
   @override
-  Future<Map<String, Object>> convertToMap(TransactionCategory entity) async {
+  Future<Map<String, Object>> convertToMap(
+      FinanceTransactionCategory entity) async {
     return {
       columnId: entity.id,
       columnName: entity.name,

@@ -1,15 +1,15 @@
 package eu.mlich.lucy.dto
 
-import eu.mlich.lucy.model.money.DepositType
+import eu.mlich.lucy.model.finance.FinanceDepositType
 import java.util.*
 import kotlin.collections.HashSet
 
-data class DepositDto(
+data class FinanceDepositDto(
         var id: UUID? = null,
         var name: String,
         var balance: Double,
         var disabled: Boolean,
-        var type: DepositType,
+        var type: FinanceDepositType,
         var ownersIds: Set<UUID> = HashSet(),
         var accessibleByUsersIds: Set<UUID> = HashSet()
 )

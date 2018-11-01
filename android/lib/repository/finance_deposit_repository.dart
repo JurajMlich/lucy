@@ -3,10 +3,10 @@ import 'package:android/repository/repository.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DepositRepository extends Repository<Deposit, String> {
-  static const String tableName = 'deposit';
-  static const String tableNameOwner = 'deposit_owner';
-  static const String tableNameAccessibleBy = 'deposit_accessible_by';
+class FinanceDepositRepository extends Repository<FinanceDeposit, String> {
+  static const String tableName = 'finance_deposit';
+  static const String tableNameOwner = 'finance_deposit_owner';
+  static const String tableNameAccessibleBy = 'finance_deposit_accessible_by';
 
   static const String columnId = 'id';
   static const String columnName = 'name';
@@ -14,10 +14,10 @@ class DepositRepository extends Repository<Deposit, String> {
   static const String columnDisabled = 'disabled';
   static const String columnType = 'type';
 
-  static const String ownerColumnDepositId = 'deposit';
-  static const String ownerColumnUserId = 'user';
+  static const String ownerColumnDepositId = 'finance_deposit_id';
+  static const String ownerColumnUserId = 'user_id';
 
-  static const String accessibleByColumnDepositId = 'deposit';
+  static const String accessibleByColumnDepositId = 'finance_deposit_id';
   static const String accessibleByColumnUserId = 'user';
 
   static const List<String> allColumns = [
@@ -30,7 +30,7 @@ class DepositRepository extends Repository<Deposit, String> {
 
   final Database _database;
 
-  DepositRepository(this._database)
+  FinanceDepositRepository(this._database)
       : super(
           _database,
           tableName,
@@ -39,20 +39,20 @@ class DepositRepository extends Repository<Deposit, String> {
         );
 
   @override
-  Future<Deposit> create(Deposit entity) async {
+  Future<FinanceDeposit> create(FinanceDeposit entity) async {
     entity = await super.create(entity);
     await _updateReferences(entity);
     return entity;
   }
 
   @override
-  Future<Deposit> update(Deposit entity) async {
+  Future<FinanceDeposit> update(FinanceDeposit entity) async {
     entity = await super.update(entity);
     await _updateReferences(entity);
     return entity;
   }
 
-  Future<Null> _updateReferences(Deposit entity) async {
+  Future<Null> _updateReferences(FinanceDeposit entity) async {
     await _database.delete(tableNameOwner,
         where: '$ownerColumnDepositId = ?', whereArgs: [entity.id]);
     await _database.delete(tableNameAccessibleBy,
@@ -77,7 +77,7 @@ class DepositRepository extends Repository<Deposit, String> {
   }
 
   @override
-  Future<Deposit> convertFromMap(Map<String, Object> data) async {
+  Future<FinanceDeposit> convertFromMap(Map<String, Object> data) async {
     var ownersRaw = await _database.query(
       tableNameOwner,
       columns: [ownerColumnUserId],
@@ -96,17 +96,17 @@ class DepositRepository extends Repository<Deposit, String> {
     var accessibleBy = Set<String>.from(
         accessibleByRaw.map((row) => row[accessibleByColumnUserId]));
 
-    return Deposit(data[columnId])
+    return FinanceDeposit(data[columnId])
       ..disabled = data[columnDisabled] == 1
       ..ownersIds = ownersIds
       ..accessibleByUsersIds = accessibleBy
-      ..type = stringToEnum<DepositType>(DepositType.values, data[columnType])
+      ..type = stringToEnum<FinanceDepositType>(FinanceDepositType.values, data[columnType])
       ..name = data[columnName]
       ..balance = data[columnBalance];
   }
 
   @override
-  Future<Map<String, Object>> convertToMap(Deposit entity) async {
+  Future<Map<String, Object>> convertToMap(FinanceDeposit entity) async {
     return {
       columnId: entity.id,
       columnName: entity.name,

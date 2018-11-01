@@ -1,12 +1,14 @@
+import 'package:android/model/finance_transaction.dart';
 import 'package:android/repository/repository.dart';
 import 'package:android/utils/datetime_utils.dart';
 import 'package:android/utils/enum_utils.dart';
-import 'package:android/model/money_transaction.dart';
 import 'package:sqflite/sqflite.dart';
 
-class MoneyTransactionRepository extends Repository<MoneyTransaction, String> {
-  static const String tableName = 'money_transaction';
-  static const String tableNameCategories = 'money_transaction_category';
+class FinanceTransactionRepository
+    extends Repository<FinanceTransaction, String> {
+  static const String tableName = 'finance_transaction';
+  static const String tableNameCategories =
+      'finance_transaction_transaction_category';
 
   static const String columnId = 'id';
   static const String columnSourceDepositId = 'source_deposit_id';
@@ -35,60 +37,59 @@ class MoneyTransactionRepository extends Repository<MoneyTransaction, String> {
 
   final Database _database;
 
-  MoneyTransactionRepository(this._database)
+  FinanceTransactionRepository(this._database)
       : super(
-    _database,
-    tableName,
-    columnId,
-    allColumns,
-  );
+          _database,
+          tableName,
+          columnId,
+          allColumns,
+        );
 
   @override
-  Future<MoneyTransaction> create(MoneyTransaction entity) async {
+  Future<FinanceTransaction> create(FinanceTransaction entity) async {
     entity = await super.create(entity);
     await _updateReferences(entity);
     return entity;
   }
 
   @override
-  Future<MoneyTransaction> update(MoneyTransaction entity) async {
+  Future<FinanceTransaction> update(FinanceTransaction entity) async {
     entity = await super.update(entity);
     await _updateReferences(entity);
     return entity;
   }
 
-  Future<Null> _updateReferences(MoneyTransaction entity) async {
+  Future<Null> _updateReferences(FinanceTransaction entity) async {
     await _database.delete(tableNameCategories,
         where: '$categoriesColumnTransactionId = ?', whereArgs: [entity.id]);
 
-    await Future.wait(entity.categoriesIds.map(((categoryId) =>
-        _database.insert(
-          tableNameCategories,
-          {
-            categoriesColumnTransactionId: entity.id,
-            categoriesColumnCategoryId: categoryId,
-          },
-        ))));
+    await Future.wait(
+        entity.categoriesIds.map(((categoryId) => _database.insert(
+              tableNameCategories,
+              {
+                categoriesColumnTransactionId: entity.id,
+                categoriesColumnCategoryId: categoryId,
+              },
+            ))));
   }
 
   @override
-  Future<MoneyTransaction> convertFromMap(Map<String, Object> data) async {
+  Future<FinanceTransaction> convertFromMap(Map<String, Object> data) async {
     var categoriesRaw = await _database.query(
       tableNameCategories,
       columns: [categoriesColumnCategoryId],
       where: '$categoriesColumnTransactionId = ?',
       whereArgs: [data[columnId]],
     );
-    var categoriesIds =
-    Set<String>.from(
+    var categoriesIds = Set<String>.from(
         categoriesRaw.map((row) => row[categoriesColumnCategoryId]));
 
     // ..executionDatetime =
-    return MoneyTransaction(data[columnId])
+    return FinanceTransaction(data[columnId])
       ..categoriesIds = categoriesIds
       ..value = data[columnValue]
       ..name = data[columnName]
-      ..state = stringToEnum(TransactionState.values, data[columnState])
+      ..state = stringToEnum(FinanceTransactionState.values, data[columnState])
       ..creatorId = data[columnCreatorId]
       ..note = data[columnNote]
       ..sourceDepositId = data[columnSourceDepositId]
@@ -97,7 +98,7 @@ class MoneyTransactionRepository extends Repository<MoneyTransaction, String> {
   }
 
   @override
-  Future<Map<String, Object>> convertToMap(MoneyTransaction entity) async {
+  Future<Map<String, Object>> convertToMap(FinanceTransaction entity) async {
     return {
       columnId: entity.id,
       columnExecutionDatetime: dateTimeToInt(entity.executionDatetime),

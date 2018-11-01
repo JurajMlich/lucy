@@ -1,7 +1,6 @@
 package eu.mlich.lucy.rest
 
-import eu.mlich.lucy.dto.TransactionDto
-import eu.mlich.lucy.rest.exception.BadRequestException
+import eu.mlich.lucy.dto.FinanceTransactionDto
 import eu.mlich.lucy.rest.exception.NotFoundException
 import eu.mlich.lucy.service.TransactionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,8 +9,8 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping(path = ["transactions"])
-class TransactionResource @Autowired constructor(private val service: TransactionService) {
+@RequestMapping(path = ["financeTransactions"])
+class FinanceTransactionResource @Autowired constructor(private val service: TransactionService) {
     @RequestMapping
     fun findAll(pageRequest: Pageable) = service.findAll(pageRequest)
 
@@ -24,10 +23,10 @@ class TransactionResource @Autowired constructor(private val service: Transactio
     ) = service.findOneByPublicKey(publicKey) ?: throw NotFoundException()
 
     @RequestMapping(method = [RequestMethod.POST])
-    fun create(@RequestBody entity: TransactionDto) = service.save(entity)
+    fun create(@RequestBody entity: FinanceTransactionDto) = service.save(entity)
 
     @RequestMapping(method = [RequestMethod.PUT], path = ["{publicKey}"])
-    fun update(@PathVariable("publicKey") publicKey: UUID, @RequestBody entity: TransactionDto): TransactionDto {
+    fun update(@PathVariable("publicKey") publicKey: UUID, @RequestBody entity: FinanceTransactionDto): FinanceTransactionDto {
         entity.id = publicKey
         service.save(entity)
         return entity

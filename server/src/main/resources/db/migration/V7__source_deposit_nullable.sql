@@ -1,0 +1,1 @@
+ALTER TABLE transaction ALTER COLUMN target_deposit_id DROP NOT NULL;
