@@ -4,27 +4,23 @@ import 'package:android/repository/finance_transaction_category_repository.dart'
 import 'package:android/ui/finance/category/finance_transaction_category_edit_page.dart';
 import 'package:flutter/material.dart';
 
-class FinanceTransactionCategoriesPickPage extends StatefulWidget {
-  final Set<String> originalCategoriesIds;
-
-  FinanceTransactionCategoriesPickPage(this.originalCategoriesIds);
+class FinanceTransactionCategoryListPage extends StatefulWidget {
+  FinanceTransactionCategoryListPage();
 
   @override
-  _FinanceTransactionCategoriesPickPageState createState() {
-    return _FinanceTransactionCategoriesPickPageState();
+  _FinanceTransactionCategoryListPageState createState() {
+    return _FinanceTransactionCategoryListPageState();
   }
 }
 
-class _FinanceTransactionCategoriesPickPageState
-    extends State<FinanceTransactionCategoriesPickPage> {
+class _FinanceTransactionCategoryListPageState
+    extends State<FinanceTransactionCategoryListPage> {
   List<FinanceTransactionCategory> categories;
-  Set<String> selectedCategoriesIds;
 
   @override
   void initState() {
     super.initState();
 
-    selectedCategoriesIds = Set.from(widget.originalCategoriesIds);
     _load();
   }
 
@@ -42,29 +38,21 @@ class _FinanceTransactionCategoriesPickPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select categories'),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () async {
-              var id = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => FinanceTransactionCategoryEditPage()),
-              );
-
-              if (id != null) {
-                _load();
-              }
-            },
-          )
-        ],
+        title: Text('Categories'),
+        actions: <Widget>[],
       ),
       body: _buildBody(context),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.done),
+        child: Icon(Icons.add),
         onPressed: () async {
-          Navigator.pop(context, selectedCategoriesIds);
+          var id = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => FinanceTransactionCategoryEditPage()));
+
+          if (id != null) {
+            _load();
+          }
         },
       ),
     );
@@ -101,26 +89,23 @@ class _FinanceTransactionCategoriesPickPageState
                       ),
                     ),
                   ),
-                  !selectedCategoriesIds.contains(category.id)
-                      ? Container(
-                          width: 0,
-                        )
-                      : Icon(
-                          Icons.done,
-                          color: Colors.green,
-                        )
                 ],
               ),
             ),
           ),
-          onTap: () {
-            setState(() {
-              if (selectedCategoriesIds.contains(category.id)) {
-                selectedCategoriesIds.remove(category.id);
-              } else {
-                selectedCategoriesIds.add(category.id);
-              }
-            });
+          onTap: () async {
+            var id = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FinanceTransactionCategoryEditPage(
+                      categoryId: category.id,
+                    ),
+              ),
+            );
+
+            if (id != null) {
+              _load();
+            }
           },
         );
       },

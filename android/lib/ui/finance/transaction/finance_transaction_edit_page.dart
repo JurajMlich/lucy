@@ -32,8 +32,8 @@ class _FinanceTransactionEditPageState
   final String transactionId;
 
   FinanceDepositRepository depositRepository;
-  FinanceTransactionRepository moneyTransactionRepository;
-  FinanceTransactionCategoryRepository transactionCategoryRepository;
+  FinanceTransactionRepository transactionRepository;
+  FinanceTransactionCategoryRepository categoryRepository;
 
   FinanceTransaction transaction;
   FinanceDeposit initialSourceDeposit;
@@ -41,24 +41,65 @@ class _FinanceTransactionEditPageState
   Set<FinanceTransactionCategory> initialCategories;
 
   ValueNotifier<DateTime> executionDatetimeController;
+  bool loaded = false;
 
   _FinanceTransactionEditPageState(this.transactionId) {
     depositRepository =
         LucyContainer().getRepository<FinanceDepositRepository>();
-    moneyTransactionRepository =
+    transactionRepository =
         LucyContainer().getRepository<FinanceTransactionRepository>();
-    transactionCategoryRepository =
+    categoryRepository =
         LucyContainer().getRepository<FinanceTransactionCategoryRepository>();
   }
 
   @override
   Widget build(BuildContext context) {
+    var actions = <Widget>[];
+
+    if (transactionId != null && loaded) {
+      actions.add(IconButton(
+        icon: Icon(Icons.delete),
+        onPressed: () async {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Delete'),
+                  content:
+                      Text('Do you really wish to delete the transaction?'),
+                  actions: <Widget>[
+                    new FlatButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('No'),
+                    ),
+                    new FlatButton(
+                      onPressed: () async {
+                        await transactionRepository.delete(transaction);
+                        Navigator.pop(context, false);
+                        Navigator.pop(context, false);
+                        FlushbarService().show(
+                          FlushType.success,
+                          'Succesfully deleted.',
+                          context,
+                        );
+                      },
+                      child: Text('Yes'),
+                    )
+                  ],
+                );
+              });
+        },
+      ));
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(this.transactionId == null
             ? 'Create transaction'
             : 'Edit transaction'),
-        actions: <Widget>[],
+        actions: actions,
       ),
       body: _buildBody(context),
       floatingActionButton: FloatingActionButton(
@@ -82,6 +123,7 @@ class _FinanceTransactionEditPageState
       initialCategories = Set();
       executionDatetimeController =
           ValueNotifier(transaction.executionDatetime);
+      loaded = true;
     } else {
       _loadTransaction(transactionId);
     }
@@ -94,20 +136,21 @@ class _FinanceTransactionEditPageState
       var errorMessage = _validate();
 
       if (errorMessage != null) {
-        FlushbarService().show(FlushType.ERROR, errorMessage, context);
+        FlushbarService().show(FlushType.error, errorMessage, context);
         return;
       }
 
       if (transactionId == null) {
-        await moneyTransactionRepository.create(transaction);
+        await transactionRepository.create(transaction);
       } else {
-        await moneyTransactionRepository.update(transaction);
+        await transactionRepository.update(transaction);
       }
 
       Navigator.pop(context, transaction.id);
+      FlushbarService().show(FlushType.success, 'Transaction saved.', context);
     } else {
       FlushbarService().show(
-          FlushType.ERROR,
+          FlushType.error,
           'The form contains errors'
           '.',
           context);
@@ -124,7 +167,7 @@ class _FinanceTransactionEditPageState
   }
 
   Future<Null> _loadTransaction(String id) async {
-    transaction = await moneyTransactionRepository.findById(this.transactionId);
+    transaction = await transactionRepository.findById(this.transactionId);
 
     if (transaction.sourceDepositId != null) {
       initialSourceDeposit =
@@ -135,18 +178,19 @@ class _FinanceTransactionEditPageState
           await depositRepository.findById(transaction.targetDepositId);
     }
 
-    initialCategories = (await Future.wait(transaction.categoriesIds.map(
-            (categoryId) =>
-                transactionCategoryRepository.findById(categoryId))))
+    initialCategories = (await Future.wait(transaction.categoriesIds
+            .map((categoryId) => categoryRepository.findById(categoryId))))
         .toSet();
 
     executionDatetimeController = ValueNotifier(transaction.executionDatetime);
 
-    setState(() {});
+    setState(() {
+      loaded = true;
+    });
   }
 
   Widget _buildBody(BuildContext context) {
-    if (transaction == null) {
+    if (!loaded) {
       return Center(
         child: CircularProgressIndicator(),
       );
@@ -226,7 +270,7 @@ class _FinanceTransactionEditPageState
                     oldValue != FinanceTransactionState.executed) {
                   executionDatetimeController.value = DateTime.now();
                   FlushbarService().show(
-                      FlushType.SUCCESS, 'Execution date set to now.', context);
+                      FlushType.success, 'Execution date set to now.', context);
                 }
 
                 return state ?? oldValue;
@@ -245,7 +289,7 @@ class _FinanceTransactionEditPageState
               controller: executionDatetimeController,
               showResetButton: false,
               validator: (val) {
-                if(val == null) {
+                if (val == null) {
                   return 'Execution date must be set.';
                 }
               },
@@ -324,8 +368,8 @@ class _FinanceTransactionEditPageState
                   return oldValue;
                 }
 
-                var res = (await Future.wait(categories.map(
-                        (id) => transactionCategoryRepository.findById(id))))
+                var res = (await Future.wait(categories
+                        .map((id) => categoryRepository.findById(id))))
                     .toSet();
 
                 return res;

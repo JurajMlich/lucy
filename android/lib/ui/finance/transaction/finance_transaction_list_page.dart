@@ -5,33 +5,134 @@ import 'package:android/ui/finance/transaction/finance_transaction_card.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
 import 'package:flutter/material.dart';
 
-class FinanceTransactionListPage extends StatefulWidget {
+enum FinanceTransactionListPageTab { executed, pending, all }
+
+class FinanceTransactionListPage extends StatelessWidget {
+  final FinanceTransactionListPageTab defaultTab;
+
+  FinanceTransactionListPage({
+    this.defaultTab = FinanceTransactionListPageTab.executed,
+  });
+
   @override
-  _FinanceTransactionListPageState createState() {
-    return _FinanceTransactionListPageState();
+  Widget build(BuildContext context) {
+    var initialTab = 0;
+
+    if(defaultTab == FinanceTransactionListPageTab.pending) {
+      initialTab = 1;
+    } else if (defaultTab == FinanceTransactionListPageTab.all) {
+      initialTab = 2;
+    }
+
+    return DefaultTabController(
+      initialIndex: initialTab,
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Transactions'),
+          actions: <Widget>[],
+          bottom: TabBar(tabs: [
+            Tab(
+              text: 'Executed',
+            ),
+            Tab(
+              text: 'Pending',
+            ),
+            Tab(
+              text: 'All',
+            )
+          ]),
+        ),
+        body: TabBarView(children: [
+          _FinanceTransactionList(
+            onlyState: [FinanceTransactionState.executed],
+          ),
+          _FinanceTransactionList(
+            onlyState: [
+              FinanceTransactionState.planned,
+              FinanceTransactionState.blocked,
+            ],
+            sort: FinanceTransactionSort.oldestToNewest,
+          ),
+          _FinanceTransactionList(),
+        ]),
+        floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () async {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FinanceTransactionEditPage()));
+          },
+        ),
+      ),
+    );
   }
 }
 
-class _FinanceTransactionListPageState
-    extends State<FinanceTransactionListPage> {
+class _FinanceTransactionList extends StatefulWidget {
+  final List<FinanceTransactionState> onlyState;
+  final FinanceTransactionExecutionDateType futureType;
+  final FinanceTransactionSort sort;
+
+  @override
+  _FinanceTransactionListState createState() {
+    return _FinanceTransactionListState();
+  }
+
+  _FinanceTransactionList({
+    this.onlyState,
+    this.futureType = FinanceTransactionExecutionDateType.all,
+    this.sort = FinanceTransactionSort.newestToOldest,
+  });
+}
+
+class _FinanceTransactionListState extends State<_FinanceTransactionList>
+    with AutomaticKeepAliveClientMixin<_FinanceTransactionList> {
   List<FinanceTransaction> transactions;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Transactions'),
-        actions: <Widget>[],
-      ),
-      body: _buildBody(context),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(
-            builder: (context) => FinanceTransactionEditPage()
-          ));
+    super.build(context);
 
-          _load();
+    if (transactions == null) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        await LucyContainer().syncManager.synchronize();
+        await _load();
+      },
+      child: ListView.builder(
+        itemCount: transactions.length,
+        itemBuilder: (context, index) {
+          return InkWell(
+              child: Container(
+                decoration: BoxDecoration(
+                    border: Border(
+                        bottom:
+                            BorderSide(color: Theme.of(context).dividerColor))),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  child: FinanceTransactionCard(transactions[index]),
+                ),
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FinanceTransactionEditPage(
+                          transactionId: transactions[index].id,
+                        ),
+                  ),
+                );
+
+                await _load();
+              });
         },
       ),
     );
@@ -47,46 +148,16 @@ class _FinanceTransactionListPageState
     this.transactions = null;
     var transactionRepository =
         LucyContainer().getRepository<FinanceTransactionRepository>();
-    var transactions = await transactionRepository.findBy();
+    var transactions = await transactionRepository.findBy(
+      onlyState: widget.onlyState,
+      futureType: widget.futureType,
+      sort: widget.sort,
+    );
     setState(() {
       this.transactions = transactions;
     });
   }
 
-  Widget _buildBody(BuildContext context) {
-    if (transactions == null) {
-      return Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        return InkWell(
-            child: Container(
-              decoration: BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(color: Theme.of(context).dividerColor))),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical:
-                14),
-                child: FinanceTransactionCard(transactions[index]),
-              ),
-            ),
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FinanceTransactionEditPage(
-                        transactionId: transactions[index].id,
-                      ),
-                ),
-              );
-
-              await _load();
-            });
-      },
-    );
-  }
+  @override
+  bool get wantKeepAlive => true;
 }

@@ -2,7 +2,12 @@ import 'package:flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-enum FlushType { INFO, SUCCESS, WARNING, ERROR }
+enum FlushType {
+  info,
+  success,
+  warning,
+  error,
+}
 
 class FlushbarService {
   static final FlushbarService _singleton = new FlushbarService._internal();
@@ -39,7 +44,8 @@ class FlushbarService {
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   ListTile(
-                    leading: icon == null ? _getIconByFlushType(flushType) : icon,
+                    leading:
+                        icon == null ? _getIconByFlushType(flushType) : icon,
                     title: Text(title, style: TextStyle(color: Colors.white)),
                   ),
                 ],
@@ -62,13 +68,13 @@ class FlushbarService {
 
   Icon _getIconByFlushType(FlushType type) {
     switch (type) {
-      case FlushType.INFO:
+      case FlushType.info:
         return Icon(Icons.info_outline, color: Colors.white);
-      case FlushType.SUCCESS:
+      case FlushType.success:
         return Icon(Icons.check_circle, color: Colors.white);
-      case FlushType.WARNING:
+      case FlushType.warning:
         return Icon(Icons.warning, color: Colors.white);
-      case FlushType.ERROR:
+      case FlushType.error:
         return Icon(Icons.error_outline, color: Colors.white);
       default:
         throw Exception('Unrecognized FlushType: $type');
@@ -77,13 +83,13 @@ class FlushbarService {
 
   Color _getColorByFlushType(FlushType type) {
     switch (type) {
-      case FlushType.INFO:
+      case FlushType.info:
         return Colors.grey[600];
-      case FlushType.SUCCESS:
+      case FlushType.success:
         return Colors.green[900];
-      case FlushType.WARNING:
+      case FlushType.warning:
         return Colors.yellow[900];
-      case FlushType.ERROR:
+      case FlushType.error:
         return Colors.red[900];
       default:
         throw Exception('Unrecognized FlushType: $type');
@@ -92,13 +98,13 @@ class FlushbarService {
 
   Duration _getDurationByFlushType(FlushType type) {
     switch (type) {
-      case FlushType.INFO:
+      case FlushType.info:
         return const Duration(seconds: 3);
-      case FlushType.SUCCESS:
+      case FlushType.success:
         return const Duration(seconds: 3);
-      case FlushType.WARNING:
+      case FlushType.warning:
         return const Duration(seconds: 4);
-      case FlushType.ERROR:
+      case FlushType.error:
         return const Duration(seconds: 4);
       default:
         throw Exception('Unrecognized FlushType: $type');

@@ -6,6 +6,7 @@ import 'package:android/service/notification/notification_channel.dart';
 import 'package:android/service/notification/notification_service.dart';
 import 'package:android/synchronization/service/sync_service.dart';
 import 'package:android/synchronization/synchronization.dart';
+import 'package:android/ui/flushbar_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -4,6 +4,7 @@ import 'package:android/model/deposit.dart';
 import 'package:android/model/finance_transaction.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/repository/finance_transaction_repository.dart';
+import 'package:android/ui/finance/category/finance_transaction_category_list_page.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_card.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_edit_page.dart';
 import 'package:android/ui/finance/transaction/finance_transaction_list_page.dart';
@@ -21,7 +22,7 @@ class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
   List<FinanceDeposit> _deposits;
   List<FinanceTransaction> _pendingTransactions;
   List<FinanceTransaction> _lastTransactions;
-  bool _loaded;
+  bool _loaded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +54,29 @@ class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
                 _load();
               }
             },
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              switch (value) {
+                case 'Categories':
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            FinanceTransactionCategoryListPage()),
+                  );
+                  _load();
+                  break;
+              }
+            },
+            itemBuilder: (context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'Categories',
+                  child: Text('Categories'),
+                )
+              ];
+            },
           )
         ],
       ),
@@ -68,7 +92,6 @@ class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
   }
 
   Future<Null> _load() async {
-    _loaded = false;
     var depositRepository =
         LucyContainer().getRepository<FinanceDepositRepository>();
 
@@ -112,27 +135,50 @@ class _FinanceOverviewPageState extends State<FinanceOverviewPage> {
 
     var children = <Widget>[];
     _buildMyDeposits(children);
-    _buildSpendings(children);
     if (_pendingTransactions.length > 0) {
       _buildTransactions(
         children: children,
         transactions: _pendingTransactions,
         title: 'Pending transactions',
-        moreText: '...all pending transactions',
-        onMore: () {},
+        moreText: 'all pending transactions...',
+        onMore: () async {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => FinanceTransactionListPage(
+                      defaultTab: FinanceTransactionListPageTab.pending,
+                    )),
+          );
+
+          _load();
+        },
       );
     }
+    _buildSpendings(children);
     _buildTransactions(
       children: children,
       transactions: _lastTransactions,
       title: 'Last transactions',
-      moreText: '...more transactions',
-      onMore: () {},
+      moreText: 'more transactions...',
+      onMore: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => FinanceTransactionListPage()),
+        );
+
+        _load();
+      },
     );
 
-    return ListView(
-      padding: EdgeInsets.only(bottom: 20),
-      children: children,
+    return RefreshIndicator(
+      onRefresh: () async {
+        await LucyContainer().syncManager.synchronize();
+        await _load();
+      },
+      child: ListView(
+        padding: EdgeInsets.only(bottom: 20),
+        children: children,
+      ),
     );
   }
 
