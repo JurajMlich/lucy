@@ -1,0 +1,1 @@
+ALTER TABLE finance_deposit ADD min_balance float NULL;

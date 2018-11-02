@@ -1,6 +1,6 @@
 import 'package:android/config/config.dart';
 import 'package:android/lucy_container.dart';
-import 'package:android/model/deposit.dart';
+import 'package:android/model/finance_deposit.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/ui/finance/finance_deposit_view.dart';
 import 'package:flutter/material.dart';

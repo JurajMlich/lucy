@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:android/exception/forbidden_exception.dart';
 import 'package:android/exception/not_found_exception.dart';
-import 'package:android/model/deposit.dart';
+import 'package:android/model/finance_deposit.dart';
 import 'package:android/model/server_instruction.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/repository/user_repository.dart';
@@ -42,6 +42,7 @@ class FinanceDepositSyncService extends SyncService<String> {
       ..ownersIds = Set()
       ..accessibleByUsersIds = Set()
       ..balance = rawDeposit['balance']
+      ..minBalance = rawDeposit['minBalance']
       ..disabled = rawDeposit['disabled']
       ..type = stringToEnum(
         FinanceDepositType.values,

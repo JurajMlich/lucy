@@ -1,4 +1,4 @@
-import 'package:android/model/deposit.dart';
+import 'package:android/model/finance_deposit.dart';
 import 'package:android/repository/repository.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:sqflite/sqflite.dart';
@@ -11,6 +11,7 @@ class FinanceDepositRepository extends Repository<FinanceDeposit, String> {
   static const String columnId = 'id';
   static const String columnName = 'name';
   static const String columnBalance = 'balance';
+  static const String columnMinBalance = 'min_balance';
   static const String columnDisabled = 'disabled';
   static const String columnType = 'type';
 
@@ -24,6 +25,7 @@ class FinanceDepositRepository extends Repository<FinanceDeposit, String> {
     columnId,
     columnName,
     columnBalance,
+    columnMinBalance,
     columnDisabled,
     columnType,
   ];
@@ -100,9 +102,11 @@ class FinanceDepositRepository extends Repository<FinanceDeposit, String> {
       ..disabled = data[columnDisabled] == 1
       ..ownersIds = ownersIds
       ..accessibleByUsersIds = accessibleBy
-      ..type = stringToEnum<FinanceDepositType>(FinanceDepositType.values, data[columnType])
+      ..type = stringToEnum<FinanceDepositType>(
+          FinanceDepositType.values, data[columnType])
       ..name = data[columnName]
-      ..balance = data[columnBalance];
+      ..balance = data[columnBalance]
+      ..minBalance = data[columnMinBalance];
   }
 
   @override
@@ -111,6 +115,7 @@ class FinanceDepositRepository extends Repository<FinanceDeposit, String> {
       columnId: entity.id,
       columnName: entity.name,
       columnBalance: entity.balance,
+      columnMinBalance: entity.minBalance,
       columnDisabled: entity.disabled,
       columnType: enumToString(entity.type)
     };

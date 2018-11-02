@@ -1,4 +1,4 @@
-import 'package:android/model/deposit.dart';
+import 'package:android/model/finance_deposit.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'deposit_operations.g.dart';

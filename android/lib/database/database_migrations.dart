@@ -29,7 +29,8 @@ List<String> buildMigrations({int oldVersion, @required int newVersion}) {
           ${FinanceDepositRepository.columnName} text, 
           ${FinanceDepositRepository.columnDisabled} integer, 
           ${FinanceDepositRepository.columnType} text, 
-          ${FinanceDepositRepository.columnBalance} real 
+          ${FinanceDepositRepository.columnBalance} real,
+          ${FinanceDepositRepository.columnMinBalance} real 
           )''');
 
     migrations.add('''create table `${FinanceDepositRepository.tableNameOwner}` (

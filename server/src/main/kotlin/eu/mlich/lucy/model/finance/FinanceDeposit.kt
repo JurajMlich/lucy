@@ -26,6 +26,9 @@ data class FinanceDeposit(
         @Column(name = "disabled")
         var disabled: Boolean,
 
+        @Column(name = "min_balance")
+        var minBalance: Double?,
+
         @Column(name = "type")
         @Enumerated(EnumType.STRING)
         var type: FinanceDepositType,

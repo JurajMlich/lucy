@@ -9,6 +9,7 @@ data class FinanceDepositDto(
         var name: String,
         var balance: Double,
         var disabled: Boolean,
+        var minBalance: Double?,
         var type: FinanceDepositType,
         var ownersIds: Set<UUID> = HashSet(),
         var accessibleByUsersIds: Set<UUID> = HashSet()

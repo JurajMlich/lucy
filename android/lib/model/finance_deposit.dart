@@ -1,7 +1,7 @@
 import 'package:android/model/id_aware.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'deposit.g.dart';
+part 'finance_deposit.g.dart';
 
 @JsonSerializable()
 class FinanceDeposit extends IdAware<String> {
@@ -10,21 +10,22 @@ class FinanceDeposit extends IdAware<String> {
   Set<String> accessibleByUsersIds;
   String name;
   double balance;
+  double minBalance;
   bool disabled;
   FinanceDepositType type;
 
   FinanceDeposit(this.id);
 
   factory FinanceDeposit.fromJson(Map<String, dynamic> json) =>
-      _$DepositFromJson(json);
+      _$FinanceDepositFromJson(json);
 
-  Map<String, dynamic> toJson() => _$DepositToJson(this);
+  Map<String, dynamic> toJson() => _$FinanceDepositToJson(this);
 
   @override
   String toString() {
     return 'FinanceDeposit{id: $id, ownersIds: $ownersIds, accessibleByUsersIds:'
-        ' $accessibleByUsersIds, name: $name, balance: $balance, disabled: '
-        '$disabled, type: $type}';
+        ' $accessibleByUsersIds, name: $name, minBalance: $minBalance, balance: '
+        '$balance, disabled: $disabled, type: $type}';
   }
 
   @override

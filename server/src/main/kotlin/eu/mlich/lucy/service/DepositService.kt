@@ -61,14 +61,15 @@ class DepositService @Autowired constructor(
                 original.name = dto.name
                 original.owners = owners
                 original.type = dto.type
+                original.minBalance = dto.minBalance
                 return original
             }
         }
 
-        return FinanceDeposit(null, dto.name, dto.balance, dto.disabled, dto.type, owners, accessibleBy, id ?: UUID.randomUUID())
+        return FinanceDeposit(null, dto.name, dto.balance, dto.disabled, dto.minBalance, dto.type, owners, accessibleBy, id ?: UUID.randomUUID())
     }
 
     fun convertToDto(entity: FinanceDeposit): FinanceDepositDto {
-        return FinanceDepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.type, entity.owners.map { it.publicKey }.toSet(), entity.accessibleBy.map { it.publicKey }.toSet())
+        return FinanceDepositDto(entity.publicKey, entity.name, entity.balance, entity.disabled, entity.minBalance, entity.type, entity.owners.map { it.publicKey }.toSet(), entity.accessibleBy.map { it.publicKey }.toSet())
     }
 }
