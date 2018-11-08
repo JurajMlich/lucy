@@ -52,7 +52,7 @@ class FinanceTransactionListPage extends StatelessWidget {
               FinanceTransactionState.planned,
               FinanceTransactionState.blocked,
             ],
-            sort: FinanceTransactionSort.oldestToNewest,
+            sort: FinanceTransactionQuerySort.oldestToNewest,
           ),
           _FinanceTransactionList(),
         ]),
@@ -72,8 +72,8 @@ class FinanceTransactionListPage extends StatelessWidget {
 
 class _FinanceTransactionList extends StatefulWidget {
   final List<FinanceTransactionState> onlyState;
-  final FinanceTransactionExecutionDateType futureType;
-  final FinanceTransactionSort sort;
+  final FinanceTransactionQueryExecutionDate futureType;
+  final FinanceTransactionQuerySort sort;
 
   @override
   _FinanceTransactionListState createState() {
@@ -82,8 +82,8 @@ class _FinanceTransactionList extends StatefulWidget {
 
   _FinanceTransactionList({
     this.onlyState,
-    this.futureType = FinanceTransactionExecutionDateType.all,
-    this.sort = FinanceTransactionSort.newestToOldest,
+    this.futureType = FinanceTransactionQueryExecutionDate.all,
+    this.sort = FinanceTransactionQuerySort.newestToOldest,
   });
 }
 
@@ -149,7 +149,7 @@ class _FinanceTransactionListState extends State<_FinanceTransactionList>
     var transactionRepository =
         LucyContainer().getRepository<FinanceTransactionRepository>();
     var transactions = await transactionRepository.findBy(
-      onlyState: widget.onlyState,
+      onlyStates: widget.onlyState,
       futureType: widget.futureType,
       sort: widget.sort,
     );

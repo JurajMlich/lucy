@@ -4,14 +4,14 @@ import 'package:android/utils/datetime_utils.dart';
 import 'package:android/utils/enum_utils.dart';
 import 'package:sqflite/sqflite.dart';
 
-enum FinanceTransactionExecutionDateType {
+enum FinanceTransactionQueryExecutionDate {
   onlyFuture,
   maxCloseFuture,
   onlyPast,
   all,
 }
 
-enum FinanceTransactionSort { newestToOldest, oldestToNewest }
+enum FinanceTransactionQuerySort { newestToOldest, oldestToNewest }
 
 class FinanceTransactionRepository
     extends Repository<FinanceTransaction, String> {
@@ -61,32 +61,32 @@ class FinanceTransactionRepository
     return entity;
   }
 
-  Future<List<FinanceTransaction>> findBy(
-      {int limit,
-      int offset,
-      List<FinanceTransactionState> onlyState,
-      FinanceTransactionExecutionDateType futureType =
-          FinanceTransactionExecutionDateType.all,
-      FinanceTransactionSort sort =
-          FinanceTransactionSort.newestToOldest}) async {
+  Future<List<FinanceTransaction>> findBy({
+    int limit,
+    int offset,
+    List<FinanceTransactionState> onlyStates,
+    FinanceTransactionQueryExecutionDate futureType =
+        FinanceTransactionQueryExecutionDate.all,
+    FinanceTransactionQuerySort sort = FinanceTransactionQuerySort.newestToOldest,
+  }) async {
     var where = '';
     var whereArgs = <String>[];
 
-    if (onlyState != null) {
+    if (onlyStates != null) {
       where +=
-          ' AND $columnState IN (${List.filled(onlyState.length, '?').join(", ")})';
-      onlyState.forEach((state) => whereArgs.add(enumToString(state)));
+          ' AND $columnState IN (${List.filled(onlyStates.length, '?').join(", ")})';
+      onlyStates.forEach((state) => whereArgs.add(enumToString(state)));
     }
 
-    if (futureType != FinanceTransactionExecutionDateType.all) {
-      if (futureType == FinanceTransactionExecutionDateType.onlyFuture) {
+    if (futureType != FinanceTransactionQueryExecutionDate.all) {
+      if (futureType == FinanceTransactionQueryExecutionDate.onlyFuture) {
         where += ' AND $columnExecutionDatetime > ?';
         whereArgs.add(dateTimeToInt(DateTime.now()).toString());
-      } else if (futureType == FinanceTransactionExecutionDateType.onlyPast) {
+      } else if (futureType == FinanceTransactionQueryExecutionDate.onlyPast) {
         where += ' AND $columnExecutionDatetime < ?';
         whereArgs.add(dateTimeToInt(DateTime.now()).toString());
       } else if (futureType ==
-          FinanceTransactionExecutionDateType.maxCloseFuture) {
+          FinanceTransactionQueryExecutionDate.maxCloseFuture) {
         where += ' AND $columnExecutionDatetime < ?';
         whereArgs.add(
             dateTimeToInt(DateTime.now().add(Duration(days: 14))).toString());
@@ -96,7 +96,7 @@ class FinanceTransactionRepository
     where = where.isEmpty ? null : where.substring(' AND'.length);
 
     var orderBy = '$columnExecutionDatetime '
-        '${sort == FinanceTransactionSort.newestToOldest ? 'DESC' : 'ASC'}';
+        '${sort == FinanceTransactionQuerySort.newestToOldest ? 'DESC' : 'ASC'}';
 
     final results = await _database.query(
       tableName,

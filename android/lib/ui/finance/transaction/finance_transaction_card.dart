@@ -6,6 +6,7 @@ import 'package:android/model/finance_transaction_category.dart';
 import 'package:android/repository/finance_deposit_repository.dart';
 import 'package:android/repository/finance_transaction_category_repository.dart';
 import 'package:android/ui/finance/finance_transaction_state_view.dart';
+import 'package:android/ui/finance/finance_ui_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -88,12 +89,9 @@ class _FinanceTransactionCardState extends State<FinanceTransactionCard> {
     if (targetDeposit != null) {
       subtitle += '--> ${targetDeposit.name}';
     }
-    var valueFormatted =
-        Config.currencyDetailedFormat.format(transaction.value);
-    if (transaction.value > 0) {
-      valueFormatted = '+$valueFormatted';
-    }
+
     var statusView = FinanceTransactionStateView.getMap()[transaction.state];
+
     return Row(
       children: <Widget>[
         Padding(
@@ -146,10 +144,9 @@ class _FinanceTransactionCardState extends State<FinanceTransactionCard> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
             Text(
-              valueFormatted,
+              formatTransactionValue(transaction),
               style: TextStyle(
-                  color:
-                      transaction.value > 0 ? Colors.lightGreen : Colors.orange,
+                  color: getColorForTransaction(transaction),
                   fontSize: 20),
             ),
             Divider(
